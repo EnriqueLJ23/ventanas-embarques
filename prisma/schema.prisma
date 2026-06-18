@@ -7,40 +7,8 @@ datasource db {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  reminders Reminder[]
-}
-
-model Reminder {
-  id           Int       @id @default(autoincrement())
-  userId       Int
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  subject      String
-  toAddresses  String[]
-  ccAddresses  String[]  @default([])
-  bodyHtml     String    @db.Text
-
-  scheduledAt  DateTime?
-  repeat       String    @default("never")
-  repeatConfig Json?
-
-  rules        Json      @default("[]")
-  attachments  Json      @default("[]")
-
-  status       String    @default("DRAFT")
-  jobId        String?
-  attempts     Int       @default(0)
-  sendCount    Int       @default(0)
-  lastError    String?
-  sentAt       DateTime?
-
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  @@index([userId, status])
-  @@index([scheduledAt, status])
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
