@@ -1,4 +1,23 @@
-.react-router
-build
+# Dependencies — reinstalled inside Docker
 node_modules
-README.md
+
+# Build output — rebuilt inside Docker
+build
+.react-router
+
+# Git
+.git
+.gitignore
+
+# Build artifacts only — .env se copia adentro de la imagen
+.env.example
+
+# Dev/editor artifacts
+*.log
+.wolf
+docs
+coverage
+
+# OS
+.DS_Store
+Thumbs.db

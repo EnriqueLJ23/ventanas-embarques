@@ -1,22 +1,59 @@
-FROM node:20-alpine AS development-dependencies-env
-COPY . /app
+# ── Stage 1: Build ───────────────────────────────────────────────
+# Installs ALL deps (dev+prod), generates Prisma client, builds the app,
+# then prunes devDeps so the final image stays lean.
+FROM node:20-alpine AS builder
+
 WORKDIR /app
+
+# Native build tools needed by some npm packages
+RUN apk add --no-cache python3 make g++
+
+COPY package*.json ./
+
+# Install everything (dev + prod) for the build step
 RUN npm ci
 
-FROM node:20-alpine AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
-WORKDIR /app
-RUN npm ci --omit=dev
+# Copy source
+COPY . .
 
-FROM node:20-alpine AS build-env
-COPY . /app/
-COPY --from=development-dependencies-env /app/node_modules /app/node_modules
-WORKDIR /app
+# Generate the Prisma client for the linux/alpine target
+RUN npx prisma generate
+
+# Build the React Router app (Vite + Tailwind + SCSS)
 RUN npm run build
 
-FROM node:20-alpine
-COPY ./package.json package-lock.json /app/
-COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build /app/build
+# Remove devDependencies — prisma & dotenv survive because they are now
+# in "dependencies" (not only devDependencies)
+RUN npm prune --omit=dev
+
+# ── Stage 2: Production runner ───────────────────────────────────
+FROM node:20-alpine AS runner
+
 WORKDIR /app
-CMD ["npm", "run", "start"]
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Pruned node_modules includes the generated Prisma client (.prisma/)
+COPY --from=builder /app/node_modules ./node_modules
+
+# Built server + client assets
+COPY --from=builder /app/build ./build
+
+# Prisma schema + migration files (needed by `prisma migrate deploy`)
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+
+# package.json is read by react-router-serve at startup
+COPY --from=builder /app/package.json ./package.json
+
+# Variables de entorno embebidas en la imagen
+COPY --from=builder /app/.env ./.env
+
+# Entrypoint: runs DB migrations then starts the server
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
+
+EXPOSE 3000
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
