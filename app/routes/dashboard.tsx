@@ -4,9 +4,6 @@ import type { Route } from "./+types/dashboard";
 import { logout, requireUserId } from "~/lib/session.server";
 import { prisma } from "~/lib/db.server";
 import { startBoss } from "~/services/boss.server";
-import { AppSidebar } from "~/components/app-sidebar";
-import { SiteHeader } from "~/components/site-header";
-import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const userId = await requireUserId(request);
@@ -20,21 +17,11 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Dashboard() {
-  const { user } = useLoaderData<typeof loader>();
+  useLoaderData<typeof loader>();
 
   return (
-    <div className="[--header-height:calc(--spacing(14))]">
-      <SidebarProvider className="flex flex-col">
-        <SiteHeader />
-        <div className="flex flex-1">
-          <AppSidebar user={user} />
-          <SidebarInset>
-            <div className="flex flex-1 flex-col gap-4 p-4">
-              <Outlet />
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+    <div>
+      <Outlet />
     </div>
   );
 }
