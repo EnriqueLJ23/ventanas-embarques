@@ -2,7 +2,7 @@ services:
 
   app:
     build: .
-    container_name: scheduler-app
+    container_name: app-template-app
     ports:
       - "3010:3000"
     depends_on:
@@ -12,15 +12,15 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: scheduler-postgres
+    container_name: app-template-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "1234"
-      POSTGRES_DB: scheduler
+      POSTGRES_DB: app_template
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d scheduler"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app_template"]
       interval: 5s
       timeout: 5s
       retries: 10

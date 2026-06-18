@@ -1,87 +1,37 @@
-# Welcome to React Router!
+# App Template
 
-A modern, production-ready template for building full-stack React applications using React Router.
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+A production-ready full-stack starter: React Router v7 + Microsoft Entra ID login + email sending via MS Graph + Postgres/Prisma, fully dockerized.
 
 ## Features
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+- 🔒 Login with Microsoft Entra ID (MSAL, OAuth code flow)
+- 🗄️ Postgres + Prisma (`@prisma/adapter-pg`)
+- 📧 Generic `sendEmail` helper via MS Graph `sendMail`
+- 🐳 Dockerized (multi-stage build + docker-compose with Postgres healthcheck)
+- ⚡️ React Router v7 nested layouts, SSR, HMR
+- 🎉 TailwindCSS v4 + shadcn (`components.json` configured, no components preinstalled — run `npx shadcn add <component>` as needed)
 
 ## Getting Started
 
-### Installation
-
-Install the dependencies:
+### Development
 
 ```bash
 npm install
-```
-
-### Development
-
-Start the development server with HMR:
-
-```bash
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+Configure Entra ID app registration values and `SESSION_SECRET` in `.env` (see existing variables: `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID`, `MICROSOFT_REDIRECT_URI`, `MAIL_SENDER`).
+
+### Docker
+
+```bash
+docker compose up --build
+```
+
+This builds the app image, starts Postgres, runs `prisma migrate deploy`, and serves the app on `http://localhost:3010`.
 
 ## Building for Production
-
-Create a production build:
 
 ```bash
 npm run build
 ```
-
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
