@@ -14,11 +14,21 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Dashboard() {
-  useLoaderData<typeof loader>();
+  const { user } = useLoaderData<typeof loader>();
 
   return (
-    <div>
-      <Outlet />
+    <div className="min-h-screen flex flex-col">
+      <header className="flex items-center justify-between p-4 border-b">
+        <span className="font-medium">{user.email}</span>
+        <form method="post" action="/logout">
+          <button type="submit" className="border px-3 py-1 rounded hover:bg-gray-50">
+            Cerrar sesión
+          </button>
+        </form>
+      </header>
+      <main className="flex-1 p-4">
+        <Outlet />
+      </main>
     </div>
   );
 }
