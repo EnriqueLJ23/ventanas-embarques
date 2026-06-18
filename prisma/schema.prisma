@@ -6,9 +6,113 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  VENTAS
+  CARGA
+  DESCARGA
+  ADMINISTRADOR
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
+  name      String   @default("")
+  role      Role     @default(VENTAS)
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Tier {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  priority    Int      @unique
+  description String?
+  clients     Client[]
+  createdAt   DateTime @default(now())
+}
+
+model Client {
+  id                 String    @id @default(cuid())
+  name               String
+  tierId             String
+  tier               Tier      @relation(fields: [tierId], references: [id])
+  avgLoadTime        Int
+  preferredWarehouse String?
+  defaultArrivalTime String?
+  active             Boolean   @default(true)
+  windows            Window[]
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model Warehouse {
+  id      String   @id @default(cuid())
+  name    String   @unique
+  code    String   @unique
+  active  Boolean  @default(true)
+  windows Window[]
+}
+
+model Window {
+  id              String           @id @default(cuid())
+  clientId        String
+  client          Client           @relation(fields: [clientId], references: [id])
+  warehouseId     String
+  warehouse       Warehouse        @relation(fields: [warehouseId], references: [id])
+  scheduledStart  DateTime
+  scheduledEnd    DateTime
+  operatorName    String
+  licensePlate    String
+  qrCode          String?
+  status          WindowStatus     @default(SCHEDULED)
+  actualStart     DateTime?
+  actualEnd       DateTime?
+  rollsCount      Int?
+  delayReason     String?
+  overrideRequest OverrideRequest?
+  type            WindowType       @default(CARGA)
+  createdBy       Int
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+enum WindowStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum WindowType {
+  CARGA
+  DESCARGA
+}
+
+model OverrideRequest {
+  id          String         @id @default(cuid())
+  windowId    String         @unique
+  window      Window         @relation(fields: [windowId], references: [id])
+  requestedBy Int
+  reason      String
+  status      OverrideStatus @default(PENDING)
+  reviewedBy  Int?
+  reviewedAt  DateTime?
+  createdAt   DateTime       @default(now())
+}
+
+enum OverrideStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    Int
+  action    String
+  entity    String
+  entityId  String?
+  detail    String?
+  createdAt DateTime @default(now())
 }
