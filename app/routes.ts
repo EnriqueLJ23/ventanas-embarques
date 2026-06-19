@@ -9,6 +9,7 @@ export default [
   layout("./routes/dashboard.tsx", [
     index("./routes/_root.tsx"),
     route("windows/new", "./routes/windows/new.tsx"),
+    route("windows/:id", "./routes/windows/detail.tsx"),
   ]),
 
   layout("./routes/auth/layout.tsx", [
