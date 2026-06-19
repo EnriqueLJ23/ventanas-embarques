@@ -26,6 +26,7 @@ export default [
     route("admin/clients", "./routes/admin/clients.tsx"),
     route("admin/users", "./routes/admin/users.tsx"),
     route("admin/overrides", "./routes/admin/overrides.tsx"),
+    route("admin/activity", "./routes/admin/activity.tsx"),
   ]),
 
   route("api/warehouses", "./routes/api/warehouses.ts"),
