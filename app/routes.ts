@@ -14,4 +14,10 @@ export default [
   ]),
 
   route("logout", "./routes/auth/logout.tsx"),
+
+  layout("./routes/admin/layout.tsx", [
+    route("admin/warehouses", "./routes/admin/warehouses.tsx"),
+  ]),
+
+  route("api/warehouses", "./routes/api/warehouses.ts"),
 ] satisfies RouteConfig;
