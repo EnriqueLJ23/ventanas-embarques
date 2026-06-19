@@ -1,4 +1,6 @@
 import { createCookieSessionStorage, redirect } from "react-router";
+import type { Role, User } from "@prisma/client";
+import { prisma } from "~/lib/db.server";
 
 type SessionData = {
   userId: number;
@@ -60,4 +62,19 @@ export async function requireUserId(request: Request) {
     throw redirect("/login");
   }
   return userId;
+}
+
+export async function requireUser(
+  request: Request,
+  allowedRoles?: Role[]
+): Promise<User> {
+  const userId = await requireUserId(request);
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || !user.active) {
+    throw await logout(request);
+  }
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    throw redirect("/");
+  }
+  return user;
 }
