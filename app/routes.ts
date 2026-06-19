@@ -28,4 +28,7 @@ export default [
   route("api/users", "./routes/api/users.ts"),
   route("api/windows", "./routes/api/windows.ts"),
   route("api/windows/conflicts", "./routes/api/windows.conflicts.ts"),
+  route("api/windows/:id", "./routes/api/windows.$id.ts"),
+  route("api/windows/:id/start", "./routes/api/windows.$id.start.ts"),
+  route("api/windows/:id/complete", "./routes/api/windows.$id.complete.ts"),
 ] satisfies RouteConfig;
