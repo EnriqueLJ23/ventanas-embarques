@@ -1,4 +1,4 @@
-import { Outlet, useLoaderData } from "react-router";
+import { Link, Outlet, useLoaderData } from "react-router";
 import type { Route } from "./+types/dashboard";
 
 import { requireUser } from "~/lib/session.server";
@@ -20,7 +20,27 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="flex items-center justify-between p-4 border-b">
-        <span className="font-medium">{user.email}</span>
+        <div className="flex items-center gap-4">
+          <span className="font-medium">{user.email}</span>
+          <nav className="flex gap-4 text-sm">
+            <Link to="/">Inicio</Link>
+            <Link to="/calendar">Calendario</Link>
+            {(user.role === "VENTAS" || user.role === "ADMINISTRADOR") && (
+              <Link to="/windows/new">Nueva ventana</Link>
+            )}
+            {user.role === "ADMINISTRADOR" && (
+              <>
+                <Link to="/reports">Reportes</Link>
+                <Link to="/admin/warehouses">Naves</Link>
+                <Link to="/admin/clients">Clientes</Link>
+                <Link to="/admin/tiers">Tiers</Link>
+                <Link to="/admin/users">Usuarios</Link>
+                <Link to="/admin/overrides">Excepciones</Link>
+                <Link to="/admin/activity">Actividad</Link>
+              </>
+            )}
+          </nav>
+        </div>
         <div className="flex items-center gap-3">
           <OverrideBadge count={pendingOverrideCount} />
           <form method="post" action="/logout">
