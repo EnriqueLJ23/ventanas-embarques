@@ -6,7 +6,10 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
-  layout("./routes/dashboard.tsx", [index("./routes/_root.tsx")]),
+  layout("./routes/dashboard.tsx", [
+    index("./routes/_root.tsx"),
+    route("windows/new", "./routes/windows/new.tsx"),
+  ]),
 
   layout("./routes/auth/layout.tsx", [
     route("login", "./routes/auth/login.tsx"),
@@ -31,4 +34,5 @@ export default [
   route("api/windows/:id", "./routes/api/windows.$id.ts"),
   route("api/windows/:id/start", "./routes/api/windows.$id.start.ts"),
   route("api/windows/:id/complete", "./routes/api/windows.$id.complete.ts"),
+  route("api/overrides", "./routes/api/overrides.ts"),
 ] satisfies RouteConfig;
