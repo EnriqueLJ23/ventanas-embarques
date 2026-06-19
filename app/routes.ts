@@ -8,6 +8,7 @@ import {
 export default [
   layout("./routes/dashboard.tsx", [
     index("./routes/_root.tsx"),
+    route("calendar", "./routes/calendar.tsx"),
     route("windows/new", "./routes/windows/new.tsx"),
     route("windows/:id", "./routes/windows/detail.tsx"),
   ]),
