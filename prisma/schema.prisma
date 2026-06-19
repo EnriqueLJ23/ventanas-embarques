@@ -34,7 +34,7 @@ model Tier {
 
 model Client {
   id                 String    @id @default(cuid())
-  name               String
+  name               String    @unique
   tierId             String
   tier               Tier      @relation(fields: [tierId], references: [id])
   avgLoadTime        Int
