@@ -25,6 +25,7 @@ export default [
     route("admin/tiers", "./routes/admin/tiers.tsx"),
     route("admin/clients", "./routes/admin/clients.tsx"),
     route("admin/users", "./routes/admin/users.tsx"),
+    route("admin/overrides", "./routes/admin/overrides.tsx"),
   ]),
 
   route("api/warehouses", "./routes/api/warehouses.ts"),
@@ -37,4 +38,5 @@ export default [
   route("api/windows/:id/start", "./routes/api/windows.$id.start.ts"),
   route("api/windows/:id/complete", "./routes/api/windows.$id.complete.ts"),
   route("api/overrides", "./routes/api/overrides.ts"),
+  route("api/overrides/:id", "./routes/api/overrides.$id.ts"),
 ] satisfies RouteConfig;
