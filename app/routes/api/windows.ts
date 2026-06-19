@@ -29,7 +29,16 @@ export async function action({ request }: Route.ActionArgs) {
   const user = await requireUser(request, ["VENTAS", "ADMINISTRADOR"]);
   const body = await request.json();
 
-  const client = await prisma.client.findUniqueOrThrow({ where: { id: body.clientId } });
+  const client = await prisma.client.findUnique({ where: { id: body.clientId } });
+  if (!client) {
+    return Response.json({ error: "client_not_found" }, { status: 400 });
+  }
+
+  const warehouse = await prisma.warehouse.findUnique({ where: { id: body.warehouseId } });
+  if (!warehouse) {
+    return Response.json({ error: "warehouse_not_found" }, { status: 400 });
+  }
+
   const scheduledStart = new Date(body.scheduledStart);
   const scheduledEnd = new Date(scheduledStart.getTime() + client.avgLoadTime * 60000);
 
