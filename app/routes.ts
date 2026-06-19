@@ -11,6 +11,7 @@ export default [
     route("calendar", "./routes/calendar.tsx"),
     route("windows/new", "./routes/windows/new.tsx"),
     route("windows/:id", "./routes/windows/detail.tsx"),
+    route("reports", "./routes/reports.tsx"),
   ]),
 
   layout("./routes/auth/layout.tsx", [
@@ -40,4 +41,6 @@ export default [
   route("api/windows/:id/complete", "./routes/api/windows.$id.complete.ts"),
   route("api/overrides", "./routes/api/overrides.ts"),
   route("api/overrides/:id", "./routes/api/overrides.$id.ts"),
+  route("api/reports/summary", "./routes/api/reports.summary.ts"),
+  route("api/reports/export", "./routes/api/reports.export.ts"),
 ] satisfies RouteConfig;
