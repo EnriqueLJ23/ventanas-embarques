@@ -18,8 +18,10 @@ export default [
   layout("./routes/admin/layout.tsx", [
     route("admin/warehouses", "./routes/admin/warehouses.tsx"),
     route("admin/tiers", "./routes/admin/tiers.tsx"),
+    route("admin/clients", "./routes/admin/clients.tsx"),
   ]),
 
   route("api/warehouses", "./routes/api/warehouses.ts"),
   route("api/tiers", "./routes/api/tiers.ts"),
+  route("api/clients", "./routes/api/clients.ts"),
 ] satisfies RouteConfig;
