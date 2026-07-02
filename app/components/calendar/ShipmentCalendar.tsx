@@ -48,7 +48,8 @@ export function ShipmentCalendar({
         color: STATUS_COLORS[e.status] ?? STATUS_COLORS.SCHEDULED,
       }))}
       eventClick={(info) => onEventClick(info.event.id)}
-      height="auto"
+      height={720}
+      expandRows={true}
       slotMinTime="06:00:00"
       slotMaxTime="22:00:00"
     />
