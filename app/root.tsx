@@ -9,7 +9,13 @@ import {
 
 import type { Route } from "./+types/root";
 import { Toaster } from "~/components/ui/sonner";
+import { startDelayEscalationWorker } from "~/lib/delayEscalation.server";
 import "./app.css";
+
+export async function loader() {
+  startDelayEscalationWorker();
+  return null;
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
