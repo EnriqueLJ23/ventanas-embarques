@@ -23,3 +23,7 @@ export function buildQrPayload(w: QrWindowData): string {
     `ID: ${w.id}`,
   ].join("\n");
 }
+
+export function buildCheckinUrl(origin: string, windowId: string): string {
+  return `${origin.replace(/\/$/, "")}/checkin/${windowId}`;
+}
