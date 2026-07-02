@@ -38,7 +38,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       entry.actualSum += (w.actualEnd.getTime() - w.actualStart.getTime()) / 60000;
       entry.actualCount += 1;
     }
-    if (w.delayReason) entry.delays += 1;
+    if (w.delayReasonCategory) entry.delays += 1;
     byClient.set(key, entry);
 
     byWarehouse.set(w.warehouse.name, (byWarehouse.get(w.warehouse.name) ?? 0) + 1);

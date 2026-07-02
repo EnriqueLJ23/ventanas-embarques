@@ -2,6 +2,7 @@ import ExcelJS from "exceljs";
 import type { Route } from "./+types/reports.export";
 import { requireUser } from "~/lib/session.server";
 import { prisma } from "~/lib/db.server";
+import { DELAY_REASON_CATEGORY_LABEL } from "~/lib/delayReasons";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
@@ -26,7 +27,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       entry.actualSum += (w.actualEnd.getTime() - w.actualStart.getTime()) / 60000;
       entry.actualCount += 1;
     }
-    if (w.delayReason) entry.delays += 1;
+    if (w.delayReasonCategory) entry.delays += 1;
     byClient.set(w.client.name, entry);
   }
   for (const [name, v] of byClient) {
@@ -36,21 +37,29 @@ export async function loader({ request }: Route.LoaderArgs) {
   const detailSheet = workbook.addWorksheet("Detalle de ventanas");
   detailSheet.addRow([
     "ID", "Cliente", "Nave", "Tipo", "Inicio programado", "Fin programado",
-    "Inicio real", "Fin real", "Operador", "Placas", "Rollos", "Estado", "Motivo de retraso",
+    "Inicio real", "Fin real", "Operador", "Placas", "Rollos", "Estado", "Motivo de retraso", "Detalle",
   ]);
   for (const w of windows) {
     detailSheet.addRow([
       w.id, w.client.name, w.warehouse.name, w.type,
       w.scheduledStart.toISOString(), w.scheduledEnd.toISOString(),
       w.actualStart?.toISOString() ?? "", w.actualEnd?.toISOString() ?? "",
-      w.operatorName, w.licensePlate, w.rollsCount ?? "", w.status, w.delayReason ?? "",
+      w.operatorName, w.licensePlate, w.rollsCount ?? "", w.status,
+      w.delayReasonCategory ? DELAY_REASON_CATEGORY_LABEL[w.delayReasonCategory] : "",
+      w.delayReason ?? "",
     ]);
   }
 
   const delaysSheet = workbook.addWorksheet("Retardos y motivos");
-  delaysSheet.addRow(["Cliente", "Nave", "Fecha", "Motivo"]);
-  for (const w of windows.filter((w) => w.delayReason)) {
-    delaysSheet.addRow([w.client.name, w.warehouse.name, w.scheduledStart.toISOString(), w.delayReason]);
+  delaysSheet.addRow(["Cliente", "Nave", "Fecha", "Motivo", "Detalle"]);
+  for (const w of windows.filter((w) => w.delayReasonCategory)) {
+    delaysSheet.addRow([
+      w.client.name,
+      w.warehouse.name,
+      w.scheduledStart.toISOString(),
+      DELAY_REASON_CATEGORY_LABEL[w.delayReasonCategory!],
+      w.delayReason ?? "",
+    ]);
   }
 
   const buffer = await workbook.xlsx.writeBuffer();
