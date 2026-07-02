@@ -71,6 +71,7 @@ model Window {
   actualEnd       DateTime?
   rollsCount      Int?
   delayReason     String?
+  delayReasonCategory DelayReasonCategory?
   lastDelayNotifiedMinutes Int?
   overrideRequest OverrideRequest?
   type            WindowType       @default(CARGA)
@@ -90,6 +91,13 @@ enum WindowStatus {
 enum WindowType {
   CARGA
   DESCARGA
+}
+
+enum DelayReasonCategory {
+  FALTA_MATERIAL_PT
+  RETRASO_OPERACION
+  CAMBIO_REQUERIMIENTO
+  OTRO
 }
 
 model OverrideRequest {
