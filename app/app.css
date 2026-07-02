@@ -66,11 +66,11 @@ body {
  * those utilities stay active with no toggle and no light fallback.
  */
 .dark {
-  --background: oklch(0.16 0.025 255);
+  --background: oklch(0.19 0.025 255);
   --foreground: oklch(0.95 0.01 255);
-  --card: oklch(0.205 0.03 255);
+  --card: oklch(0.235 0.03 255);
   --card-foreground: oklch(0.95 0.01 255);
-  --popover: oklch(0.205 0.03 255);
+  --popover: oklch(0.235 0.03 255);
   --popover-foreground: oklch(0.95 0.01 255);
   --primary: oklch(0.62 0.19 255);
   --primary-foreground: oklch(0.98 0 0);
@@ -90,7 +90,7 @@ body {
   --chart-4: oklch(0.75 0.10 230);
   --chart-5: oklch(0.45 0.14 255);
   --radius: 0.625rem;
-  --sidebar: oklch(0.13 0.02 255);
+  --sidebar: oklch(0.16 0.02 255);
   --sidebar-foreground: oklch(0.95 0.01 255);
   --sidebar-primary: oklch(0.62 0.19 255);
   --sidebar-primary-foreground: oklch(0.98 0 0);
