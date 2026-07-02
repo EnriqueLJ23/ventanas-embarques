@@ -10,7 +10,6 @@ import {
   CalendarRange,
   Clock3,
   ListChecks,
-  PlusCircle,
   TimerReset,
 } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis } from "recharts";
@@ -198,15 +197,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   return (
     <div className="space-y-6">
       <PageHeader title="Bienvenido" description={today} />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
-        <Link to="/windows/new">
-          <Card className="hover:bg-accent transition-colors">
-            <CardContent className="flex items-center gap-3 pt-6">
-              <PlusCircle className="size-5 text-primary" />
-              <span className="font-medium">Nueva ventana</span>
-            </CardContent>
-          </Card>
-        </Link>
+      <div className="max-w-xs">
         <Link to="/calendar">
           <Card className="hover:bg-accent transition-colors">
             <CardContent className="flex items-center gap-3 pt-6">

@@ -1,5 +1,4 @@
 const STATIC_LABELS: [prefix: string, label: string][] = [
-  ["/windows/new", "Nueva ventana"],
   ["/calendar", "Calendario"],
   ["/reports", "Reportes"],
   ["/admin/warehouses", "Naves"],

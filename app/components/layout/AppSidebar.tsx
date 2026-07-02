@@ -5,7 +5,6 @@ import {
   History,
   Home,
   LayoutGrid,
-  PlusCircle,
   ShieldCheck,
   Users,
   Warehouse,
@@ -70,7 +69,6 @@ function NavLinkItem({ item, pathname }: { item: NavItem; pathname: string }) {
 
 export function AppSidebar({ role }: { role: Role }) {
   const { pathname } = useLocation();
-  const canCreateWindow = role === "VENTAS" || role === "ADMINISTRADOR";
 
   return (
     <Sidebar collapsible="icon">
@@ -93,12 +91,6 @@ export function AppSidebar({ role }: { role: Role }) {
               {operationItems.map((item) => (
                 <NavLinkItem key={item.to} item={item} pathname={pathname} />
               ))}
-              {canCreateWindow && (
-                <NavLinkItem
-                  item={{ to: "/windows/new", label: "Nueva ventana", icon: PlusCircle }}
-                  pathname={pathname}
-                />
-              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
