@@ -196,7 +196,7 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
   const canCreate = role === "VENTAS" || role === "ADMINISTRADOR";
 
   return (
-    <div className="space-y-4">
+    <div className="flex h-full flex-col space-y-4">
       <PageHeader
         title="Calendario de ventanas"
         description="Vista por nave de las ventanas programadas, en curso y completadas."
@@ -226,8 +226,8 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
         }
       />
 
-      <Card>
-        <CardContent className="pt-6">
+      <Card className="flex min-h-0 flex-1 flex-col py-2">
+        <CardContent className="min-h-0 flex-1 px-2">
           <ShipmentCalendar
             resources={resources}
             events={events}

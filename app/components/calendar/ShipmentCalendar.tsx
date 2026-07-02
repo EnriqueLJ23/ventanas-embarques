@@ -34,7 +34,7 @@ export function ShipmentCalendar({
   onEventClick: (id: string) => void;
 }) {
   return (
-    <div className="h-[clamp(520px,calc(100vh-260px),880px)]">
+    <div className="h-full min-h-[420px]">
       <FullCalendar
         schedulerLicenseKey="CC-Attribution-NonCommercial-NoDerivatives"
         plugins={[resourceTimelinePlugin, interactionPlugin]}

@@ -67,8 +67,8 @@ export default function Dashboard() {
               <UserMenu email={user.email} />
             </div>
           </header>
-          <main className="flex-1 bg-muted/15 p-6 md:p-8">
-            <div className="mx-auto max-w-6xl">
+          <main className="flex-1 min-h-0 overflow-y-auto bg-muted/15 p-6 md:p-8">
+            <div className="mx-auto flex h-full max-w-6xl flex-col">
               <Outlet />
             </div>
           </main>
