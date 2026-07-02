@@ -4,6 +4,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 
 const STATUS_COLORS: Record<string, string> = {
   SCHEDULED: "#64748b",
+  ARRIVED: "#d97706",
   IN_PROGRESS: "#2563eb",
   COMPLETED: "#16a34a",
   CANCELLED: "#dc2626",
@@ -34,6 +35,7 @@ export function ShipmentCalendar({
 }) {
   return (
     <FullCalendar
+      schedulerLicenseKey="CC-Attribution-NonCommercial-NoDerivatives"
       plugins={[resourceTimelinePlugin, interactionPlugin]}
       initialView="resourceTimelineDay"
       resources={resources}
