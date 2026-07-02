@@ -66,6 +66,7 @@ model Window {
   licensePlate    String
   qrCode          String?
   status          WindowStatus     @default(SCHEDULED)
+  actualArrival   DateTime?
   actualStart     DateTime?
   actualEnd       DateTime?
   rollsCount      Int?
@@ -79,6 +80,7 @@ model Window {
 
 enum WindowStatus {
   SCHEDULED
+  ARRIVED
   IN_PROGRESS
   COMPLETED
   CANCELLED
