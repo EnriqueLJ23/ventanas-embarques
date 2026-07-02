@@ -71,6 +71,7 @@ model Window {
   actualEnd       DateTime?
   rollsCount      Int?
   delayReason     String?
+  lastDelayNotifiedMinutes Int?
   overrideRequest OverrideRequest?
   type            WindowType       @default(CARGA)
   createdBy       Int
