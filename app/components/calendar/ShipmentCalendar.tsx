@@ -51,8 +51,8 @@ export function ShipmentCalendar({
         eventClick={(info) => onEventClick(info.event.id)}
         height="100%"
         expandRows={true}
-        slotMinTime="06:00:00"
-        slotMaxTime="22:00:00"
+        slotMinTime="07:00:00"
+        slotMaxTime="17:00:00"
       />
     </div>
   );

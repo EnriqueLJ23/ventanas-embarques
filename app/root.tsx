@@ -40,6 +40,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
+        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+          <div className="absolute -top-40 -left-40 h-[550px] w-[550px] rounded-full bg-[oklch(0.55_0.20_255)] opacity-25 blur-[120px]" />
+          <div className="absolute -right-40 top-1/3 h-[500px] w-[500px] rounded-full bg-[oklch(0.5_0.18_300)] opacity-20 blur-[120px]" />
+          <div className="absolute -bottom-52 left-1/4 h-[500px] w-[500px] rounded-full bg-[oklch(0.55_0.15_200)] opacity-15 blur-[120px]" />
+        </div>
         {children}
         <Toaster />
         <ScrollRestoration />

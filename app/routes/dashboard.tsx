@@ -42,7 +42,7 @@ export default function Dashboard() {
       <SidebarProvider>
         <AppSidebar role={user.role} />
         <SidebarInset>
-          <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background/95 px-4 backdrop-blur-sm">
+          <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background/80 px-4 backdrop-blur-xl">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="h-4" />
@@ -67,7 +67,7 @@ export default function Dashboard() {
               <UserMenu email={user.email} />
             </div>
           </header>
-          <main className="flex-1 bg-muted/30 p-6 md:p-8">
+          <main className="flex-1 bg-muted/15 p-6 md:p-8">
             <div className="mx-auto max-w-6xl">
               <Outlet />
             </div>
