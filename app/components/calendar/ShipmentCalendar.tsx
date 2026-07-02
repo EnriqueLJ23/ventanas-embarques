@@ -34,24 +34,26 @@ export function ShipmentCalendar({
   onEventClick: (id: string) => void;
 }) {
   return (
-    <FullCalendar
-      schedulerLicenseKey="CC-Attribution-NonCommercial-NoDerivatives"
-      plugins={[resourceTimelinePlugin, interactionPlugin]}
-      initialView="resourceTimelineDay"
-      resources={resources}
-      events={events.map((e) => ({
-        id: e.id,
-        resourceId: e.resourceId,
-        title: e.title,
-        start: e.start,
-        end: e.end,
-        color: STATUS_COLORS[e.status] ?? STATUS_COLORS.SCHEDULED,
-      }))}
-      eventClick={(info) => onEventClick(info.event.id)}
-      height={720}
-      expandRows={true}
-      slotMinTime="06:00:00"
-      slotMaxTime="22:00:00"
-    />
+    <div className="h-[clamp(520px,calc(100vh-260px),880px)]">
+      <FullCalendar
+        schedulerLicenseKey="CC-Attribution-NonCommercial-NoDerivatives"
+        plugins={[resourceTimelinePlugin, interactionPlugin]}
+        initialView="resourceTimelineDay"
+        resources={resources}
+        events={events.map((e) => ({
+          id: e.id,
+          resourceId: e.resourceId,
+          title: e.title,
+          start: e.start,
+          end: e.end,
+          color: STATUS_COLORS[e.status] ?? STATUS_COLORS.SCHEDULED,
+        }))}
+        eventClick={(info) => onEventClick(info.event.id)}
+        height="100%"
+        expandRows={true}
+        slotMinTime="06:00:00"
+        slotMaxTime="22:00:00"
+      />
+    </div>
   );
 }
