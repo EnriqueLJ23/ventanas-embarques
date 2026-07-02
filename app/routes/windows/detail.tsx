@@ -20,6 +20,14 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { PageHeader } from "~/components/layout/PageHeader";
 import { WINDOW_STATUS_BADGE_VARIANT, WINDOW_STATUS_LABEL } from "~/lib/windowStatus";
+import { DELAY_REASON_CATEGORY_LABEL } from "~/lib/delayReasons";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { QrCode } from "lucide-react";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -37,6 +45,7 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
   const [qrOpen, setQrOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
   const [rollsCount, setRollsCount] = useState("");
+  const [delayReasonCategory, setDelayReasonCategory] = useState("");
   const [delayReason, setDelayReason] = useState("");
   const [needsDelayReason, setNeedsDelayReason] = useState(false);
 
@@ -64,7 +73,11 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
     const res = await fetch(`/api/windows/${window.id}/complete`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rollsCount, delayReason: delayReason || undefined }),
+      body: JSON.stringify({
+        rollsCount,
+        delayReasonCategory: delayReasonCategory || undefined,
+        delayReason: delayReason || undefined,
+      }),
     });
     if (res.status === 400) {
       setNeedsDelayReason(true);
@@ -136,8 +149,14 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
             {window.rollsCount != null && (
               <Field label="Rollos embarcados" value={window.rollsCount} />
             )}
+            {window.delayReasonCategory && (
+              <Field
+                label="Motivo de retraso"
+                value={DELAY_REASON_CATEGORY_LABEL[window.delayReasonCategory]}
+              />
+            )}
             {window.delayReason && (
-              <Field label="Motivo de retraso" value={window.delayReason} />
+              <Field label="Detalle adicional" value={window.delayReason} />
             )}
           </div>
         </CardContent>
@@ -159,16 +178,36 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
               />
             </div>
             {needsDelayReason && (
-              <div className="space-y-1">
-                <Label htmlFor="delayReason">Motivo del retraso</Label>
-                <Textarea
-                  id="delayReason"
-                  value={delayReason}
-                  onChange={(e) => setDelayReason(e.target.value)}
-                />
-              </div>
+              <>
+                <div className="space-y-1">
+                  <Label htmlFor="delayReasonCategory">Motivo del retraso</Label>
+                  <Select value={delayReasonCategory} onValueChange={setDelayReasonCategory}>
+                    <SelectTrigger id="delayReasonCategory">
+                      <SelectValue placeholder="Selecciona un motivo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(DELAY_REASON_CATEGORY_LABEL).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="delayReason">Detalle adicional (opcional)</Label>
+                  <Textarea
+                    id="delayReason"
+                    value={delayReason}
+                    onChange={(e) => setDelayReason(e.target.value)}
+                  />
+                </div>
+              </>
             )}
-            <Button onClick={handleComplete} disabled={!rollsCount}>
+            <Button
+              onClick={handleComplete}
+              disabled={!rollsCount || (needsDelayReason && !delayReasonCategory)}
+            >
               Confirmar
             </Button>
           </div>
