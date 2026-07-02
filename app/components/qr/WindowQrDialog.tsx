@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
-import { buildQrPayload, type QrWindowData } from "~/lib/qr";
+import { buildCheckinUrl, buildQrPayload, type QrWindowData } from "~/lib/qr";
 
 export function WindowQrDialog({
   open,
@@ -37,7 +37,7 @@ export function WindowQrDialog({
           <DialogTitle>Código QR de la ventana</DialogTitle>
         </DialogHeader>
         <div ref={containerRef} className="flex flex-col items-center gap-3 bg-white p-4">
-          <QRCodeCanvas value={buildQrPayload(windowData)} size={220} />
+          <QRCodeCanvas value={buildCheckinUrl(window.location.origin, windowData.id)} size={220} />
           <p className="text-sm text-center whitespace-pre-line">
             {buildQrPayload(windowData)}
           </p>
