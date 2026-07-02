@@ -1,9 +1,27 @@
-import { Link, Outlet, useLoaderData } from "react-router";
+import { Outlet, useLoaderData, useLocation } from "react-router";
 import type { Route } from "./+types/dashboard";
 
 import { requireUser } from "~/lib/session.server";
 import { prisma } from "~/lib/db.server";
 import { OverrideBadge } from "~/components/admin/OverrideBadge";
+import { AppSidebar } from "~/components/layout/AppSidebar";
+import { UserMenu } from "~/components/layout/UserMenu";
+import { getPageTitle } from "~/lib/navigation";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "~/components/ui/sidebar";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "~/components/ui/breadcrumb";
+import { Separator } from "~/components/ui/separator";
+import { TooltipProvider } from "~/components/ui/tooltip";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -16,43 +34,46 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Dashboard() {
   const { user, pendingOverrideCount } = useLoaderData<typeof loader>();
+  const { pathname } = useLocation();
+  const pageTitle = getPageTitle(pathname);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center gap-4">
-          <span className="font-medium">{user.email}</span>
-          <nav className="flex gap-4 text-sm">
-            <Link to="/">Inicio</Link>
-            <Link to="/calendar">Calendario</Link>
-            {(user.role === "VENTAS" || user.role === "ADMINISTRADOR") && (
-              <Link to="/windows/new">Nueva ventana</Link>
-            )}
-            {user.role === "ADMINISTRADOR" && (
-              <>
-                <Link to="/reports">Reportes</Link>
-                <Link to="/admin/warehouses">Naves</Link>
-                <Link to="/admin/clients">Clientes</Link>
-                <Link to="/admin/tiers">Tiers</Link>
-                <Link to="/admin/users">Usuarios</Link>
-                <Link to="/admin/overrides">Excepciones</Link>
-                <Link to="/admin/activity">Actividad</Link>
-              </>
-            )}
-          </nav>
-        </div>
-        <div className="flex items-center gap-3">
-          <OverrideBadge count={pendingOverrideCount} />
-          <form method="post" action="/logout">
-            <button type="submit" className="border px-3 py-1 rounded hover:bg-gray-50">
-              Cerrar sesión
-            </button>
-          </form>
-        </div>
-      </header>
-      <main className="flex-1 p-4">
-        <Outlet />
-      </main>
-    </div>
+    <TooltipProvider>
+      <SidebarProvider>
+        <AppSidebar role={user.role} />
+        <SidebarInset>
+          <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background/95 px-4 backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="h-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="/">Inicio</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  {pageTitle !== "Inicio" && (
+                    <>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        <BreadcrumbPage>{pageTitle}</BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </>
+                  )}
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+            <div className="flex items-center gap-3">
+              <OverrideBadge count={pendingOverrideCount} />
+              <UserMenu email={user.email} />
+            </div>
+          </header>
+          <main className="flex-1 bg-muted/30 p-6 md:p-8">
+            <div className="mx-auto max-w-6xl">
+              <Outlet />
+            </div>
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </TooltipProvider>
   );
 }

@@ -15,6 +15,22 @@ export async function loader({ request }: Route.LoaderArgs) {
 export async function action({ request }: Route.ActionArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
   const body = await request.json();
+
+  if (request.method === "PATCH") {
+    const client = await prisma.client.update({
+      where: { id: body.id },
+      data: {
+        name: body.name,
+        tierId: body.tierId,
+        avgLoadTime: Number(body.avgLoadTime),
+        preferredWarehouse: body.preferredWarehouse ?? null,
+        defaultArrivalTime: body.defaultArrivalTime ?? null,
+        active: body.active ?? undefined,
+      },
+    });
+    return Response.json(client);
+  }
+
   const client = await prisma.client.create({
     data: {
       name: body.name,

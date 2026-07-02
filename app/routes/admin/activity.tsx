@@ -10,6 +10,12 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { format } from "date-fns";
+import { PageHeader } from "~/components/layout/PageHeader";
+import { EmptyState } from "~/components/layout/EmptyState";
+import { TableCard } from "~/components/layout/TableCard";
+import { Card, CardContent } from "~/components/ui/card";
+import { Badge } from "~/components/ui/badge";
+import { History } from "lucide-react";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
@@ -29,29 +35,43 @@ export default function ActivityAdmin({ loaderData }: Route.ComponentProps) {
   const { logs } = loaderData;
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Historial de actividad</h2>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Fecha</TableHead>
-            <TableHead>Usuario</TableHead>
-            <TableHead>Acción</TableHead>
-            <TableHead>Entidad</TableHead>
-            <TableHead>Detalle</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {logs.map((l) => (
-            <TableRow key={l.id}>
-              <TableCell>{format(new Date(l.createdAt), "dd/MM/yyyy HH:mm")}</TableCell>
-              <TableCell>{l.userName}</TableCell>
-              <TableCell>{l.action}</TableCell>
-              <TableCell>{l.entity}</TableCell>
-              <TableCell>{l.detail}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <PageHeader title="Historial de actividad" description="Últimas 200 acciones registradas en el sistema." />
+      {logs.length === 0 ? (
+        <Card>
+          <CardContent>
+            <EmptyState message="No hay actividad registrada todavía." icon={History} />
+          </CardContent>
+        </Card>
+      ) : (
+        <TableCard>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-4">Fecha</TableHead>
+                <TableHead>Usuario</TableHead>
+                <TableHead>Acción</TableHead>
+                <TableHead>Entidad</TableHead>
+                <TableHead className="pr-4">Detalle</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {logs.map((l) => (
+                <TableRow key={l.id}>
+                  <TableCell className="pl-4 text-muted-foreground">
+                    {format(new Date(l.createdAt), "dd/MM/yyyy HH:mm")}
+                  </TableCell>
+                  <TableCell className="font-medium">{l.userName}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{l.action}</Badge>
+                  </TableCell>
+                  <TableCell>{l.entity}</TableCell>
+                  <TableCell className="pr-4 text-muted-foreground">{l.detail}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableCard>
+      )}
     </div>
   );
 }

@@ -8,10 +8,5 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function AdminLayout() {
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Administración</h1>
-      <Outlet />
-    </div>
-  );
+  return <Outlet />;
 }

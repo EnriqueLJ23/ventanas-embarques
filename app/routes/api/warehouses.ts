@@ -11,6 +11,19 @@ export async function loader({ request }: Route.LoaderArgs) {
 export async function action({ request }: Route.ActionArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
   const body = await request.json();
+
+  if (request.method === "PATCH") {
+    const warehouse = await prisma.warehouse.update({
+      where: { id: body.id },
+      data: {
+        name: body.name ?? undefined,
+        code: body.code ?? undefined,
+        active: body.active ?? undefined,
+      },
+    });
+    return Response.json(warehouse);
+  }
+
   const warehouse = await prisma.warehouse.create({
     data: { name: body.name, code: body.code },
   });

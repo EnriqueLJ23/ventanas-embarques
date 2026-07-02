@@ -13,6 +13,11 @@ import {
 } from "~/components/ui/table";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { PageHeader } from "~/components/layout/PageHeader";
+import { EmptyState } from "~/components/layout/EmptyState";
+import { TableCard } from "~/components/layout/TableCard";
+import { Card, CardContent } from "~/components/ui/card";
+import { ClipboardCheck } from "lucide-react";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
@@ -44,39 +49,52 @@ export default function OverridesAdmin({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Solicitudes de excepción pendientes</h2>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Cliente</TableHead>
-            <TableHead>Nave</TableHead>
-            <TableHead>Horario</TableHead>
-            <TableHead>Motivo</TableHead>
-            <TableHead></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {overrides.map((o) => (
-            <TableRow key={o.id}>
-              <TableCell>{o.window.client.name}</TableCell>
-              <TableCell>{o.window.warehouse.name}</TableCell>
-              <TableCell>
-                {format(new Date(o.window.scheduledStart), "dd/MM HH:mm")} -{" "}
-                {format(new Date(o.window.scheduledEnd), "HH:mm")}
-              </TableCell>
-              <TableCell>{o.reason}</TableCell>
-              <TableCell className="flex gap-2">
-                <Button size="sm" onClick={() => review(o.id, "APPROVED")}>
-                  Aprobar
-                </Button>
-                <Button size="sm" variant="destructive" onClick={() => review(o.id, "REJECTED")}>
-                  Rechazar
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <PageHeader
+        title="Excepciones"
+        description="Solicitudes de excepción a la validación de solapamiento, pendientes de revisión."
+      />
+      {overrides.length === 0 ? (
+        <Card>
+          <CardContent>
+            <EmptyState message="No hay solicitudes pendientes." icon={ClipboardCheck} />
+          </CardContent>
+        </Card>
+      ) : (
+        <TableCard>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-4">Cliente</TableHead>
+                <TableHead>Nave</TableHead>
+                <TableHead>Horario</TableHead>
+                <TableHead>Motivo</TableHead>
+                <TableHead className="pr-4"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {overrides.map((o) => (
+                <TableRow key={o.id}>
+                  <TableCell className="pl-4 font-medium">{o.window.client.name}</TableCell>
+                  <TableCell>{o.window.warehouse.name}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {format(new Date(o.window.scheduledStart), "dd/MM HH:mm")} -{" "}
+                    {format(new Date(o.window.scheduledEnd), "HH:mm")}
+                  </TableCell>
+                  <TableCell>{o.reason}</TableCell>
+                  <TableCell className="pr-4 flex gap-2">
+                    <Button size="sm" onClick={() => review(o.id, "APPROVED")}>
+                      Aprobar
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => review(o.id, "REJECTED")}>
+                      Rechazar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableCard>
+      )}
     </div>
   );
 }
