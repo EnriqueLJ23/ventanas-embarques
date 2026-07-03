@@ -1,10 +1,12 @@
 import { Link, useLocation } from "react-router";
 import {
+  AlertTriangle,
   CalendarRange,
   ClipboardList,
   History,
   Home,
   LayoutGrid,
+  Mail,
   ShieldCheck,
   Users,
   Warehouse,
@@ -36,13 +38,25 @@ const operationItems: NavItem[] = [
   { to: "/calendar", label: "Calendario", icon: CalendarRange },
 ];
 
-const adminItems: NavItem[] = [
-  { to: "/admin/warehouses", label: "Naves", icon: Warehouse },
+const catalogItems: NavItem[] = [
   { to: "/admin/clients", label: "Clientes", icon: Users },
   { to: "/admin/tiers", label: "Tiers", icon: LayoutGrid },
+  { to: "/admin/warehouses", label: "Naves", icon: Warehouse },
+  { to: "/admin/delay-reasons", label: "Motivos de retraso", icon: AlertTriangle },
+];
+
+const notificationItems: NavItem[] = [
+  { to: "/admin/notifications", label: "Destinatarios", icon: Mail },
+];
+
+const userItems: NavItem[] = [
   { to: "/admin/users", label: "Usuarios", icon: ShieldCheck },
+];
+
+const operationAdminItems: NavItem[] = [
   { to: "/admin/overrides", label: "Excepciones", icon: ClipboardList },
   { to: "/admin/activity", label: "Actividad", icon: History },
+  { to: "/reports", label: "Reportes", icon: LayoutGrid },
 ];
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -98,16 +112,42 @@ export function AppSidebar({ role }: { role: Role }) {
           <>
             <SidebarSeparator />
             <SidebarGroup>
-              <SidebarGroupLabel>Administración</SidebarGroupLabel>
+              <SidebarGroupLabel>Catálogos</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {adminItems.map((item) => (
+                  {catalogItems.map((item) => (
                     <NavLinkItem key={item.to} item={item} pathname={pathname} />
                   ))}
-                  <NavLinkItem
-                    item={{ to: "/reports", label: "Reportes", icon: LayoutGrid }}
-                    pathname={pathname}
-                  />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel>Notificaciones</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {notificationItems.map((item) => (
+                    <NavLinkItem key={item.to} item={item} pathname={pathname} />
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel>Usuarios y accesos</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {userItems.map((item) => (
+                    <NavLinkItem key={item.to} item={item} pathname={pathname} />
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel>Operación</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {operationAdminItems.map((item) => (
+                    <NavLinkItem key={item.to} item={item} pathname={pathname} />
+                  ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
