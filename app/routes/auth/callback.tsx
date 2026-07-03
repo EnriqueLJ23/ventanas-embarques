@@ -5,8 +5,9 @@ import type { Route } from "./+types/callback";
 import { msalClient, REDIRECT_URI } from "~/lib/microsoft.server";
 
 import { createUserSession } from "~/lib/session.server";
+import { prisma } from "~/lib/db.server";
 
-import { findOrCreateUser } from "~/services/auth-server";
+import { findRegisteredUser } from "~/services/auth-server";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -28,7 +29,27 @@ export async function loader({ request }: Route.LoaderArgs) {
     throw redirect("/login");
   }
 
-  const user = await findOrCreateUser(email);
+  const user = await findRegisteredUser(email);
+
+  if (!user) {
+    throw redirect("/login?error=not_registered");
+  }
+
+  if (!user.name && response.accessToken) {
+    try {
+      const meRes = await fetch("https://graph.microsoft.com/v1.0/me", {
+        headers: { Authorization: `Bearer ${response.accessToken}` },
+      });
+      if (meRes.ok) {
+        const me = await meRes.json();
+        if (me.displayName) {
+          await prisma.user.update({ where: { id: user.id }, data: { name: me.displayName } });
+        }
+      }
+    } catch (err) {
+      console.error("No se pudo obtener displayName de Graph:", err);
+    }
+  }
 
   return createUserSession(user.id, "/");
 }
