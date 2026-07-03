@@ -1,12 +1,4 @@
-import { msalClient } from "~/lib/microsoft.server";
-
-async function getAppAccessToken(): Promise<string> {
-  const result = await msalClient.acquireTokenByClientCredential({
-    scopes: ["https://graph.microsoft.com/.default"],
-  });
-  if (!result?.accessToken) throw new Error("Failed to acquire app access token");
-  return result.accessToken;
-}
+import { getAppAccessToken } from "~/lib/microsoft.server";
 
 export async function sendEmail({
   fromEmail,

@@ -38,6 +38,7 @@ export default [
   route("api/tiers", "./routes/api/tiers.ts"),
   route("api/clients", "./routes/api/clients.ts"),
   route("api/users", "./routes/api/users.ts"),
+  route("api/users/search", "./routes/api/users.search.ts"),
   route("api/windows", "./routes/api/windows.ts"),
   route("api/windows/conflicts", "./routes/api/windows.conflicts.ts"),
   route("api/windows/:id", "./routes/api/windows.$id.ts"),
