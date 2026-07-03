@@ -14,13 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "~/components/ui/dialog";
+import { CrudFormDialog } from "~/components/admin/CrudFormDialog";
 import { Badge } from "~/components/ui/badge";
 import { Card, CardContent } from "~/components/ui/card";
 import { PageHeader } from "~/components/layout/PageHeader";
@@ -95,55 +89,43 @@ export default function WarehousesAdmin({ loaderData }: Route.ComponentProps) {
         title="Naves"
         description="Almacenes disponibles para programar ventanas de embarque."
         action={
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>Nueva nave</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Nueva nave</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label htmlFor="name">Nombre</Label>
-                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="code">Código</Label>
-                  <Input id="code" value={code} onChange={(e) => setCode(e.target.value)} />
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={handleCreate} disabled={!name || !code}>Guardar</Button>
-                  <Button variant="ghost" onClick={() => setCreateOpen(false)}>Cancelar</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <CrudFormDialog
+            trigger={<Button>Nueva nave</Button>}
+            title="Nueva nave"
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+            onSave={handleCreate}
+            saveDisabled={!name || !code}
+          >
+            <div className="space-y-1">
+              <Label htmlFor="name">Nombre</Label>
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="code">Código</Label>
+              <Input id="code" value={code} onChange={(e) => setCode(e.target.value)} />
+            </div>
+          </CrudFormDialog>
         }
       />
 
       {/* Edit dialog */}
-      <Dialog open={!!editTarget} onOpenChange={(o) => !o && setEditTarget(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar nave</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label htmlFor="editName">Nombre</Label>
-              <Input id="editName" value={editName} onChange={(e) => setEditName(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="editCode">Código</Label>
-              <Input id="editCode" value={editCode} onChange={(e) => setEditCode(e.target.value)} />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleEdit} disabled={!editName || !editCode}>Guardar</Button>
-              <Button variant="ghost" onClick={() => setEditTarget(null)}>Cancelar</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CrudFormDialog
+        title="Editar nave"
+        open={!!editTarget}
+        onOpenChange={(o) => !o && setEditTarget(null)}
+        onSave={handleEdit}
+        saveDisabled={!editName || !editCode}
+      >
+        <div className="space-y-1">
+          <Label htmlFor="editName">Nombre</Label>
+          <Input id="editName" value={editName} onChange={(e) => setEditName(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="editCode">Código</Label>
+          <Input id="editCode" value={editCode} onChange={(e) => setEditCode(e.target.value)} />
+        </div>
+      </CrudFormDialog>
 
       {warehouses.length === 0 ? (
         <Card>
