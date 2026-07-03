@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Form, useNavigation, useSearchParams } from "react-router";
 import type { Route } from "./+types/activity";
 import { requireUser } from "~/lib/session.server";
 import { prisma } from "~/lib/db.server";
@@ -9,6 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
+import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/button";
 import { format } from "date-fns";
 import { PageHeader } from "~/components/layout/PageHeader";
 import { EmptyState } from "~/components/layout/EmptyState";
@@ -17,25 +21,78 @@ import { Card, CardContent } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { History } from "lucide-react";
 
+const PAGE_SIZE = 50;
+
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
-  const logs = await prisma.activityLog.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 200,
-  });
+  const url = new URL(request.url);
+  const page = Math.max(1, Number(url.searchParams.get("page") ?? "1"));
+  const search = url.searchParams.get("search")?.trim() ?? "";
+
+  const where = search
+    ? {
+        OR: [
+          { action: { contains: search, mode: "insensitive" as const } },
+          { entity: { contains: search, mode: "insensitive" as const } },
+          { detail: { contains: search, mode: "insensitive" as const } },
+        ],
+      }
+    : {};
+
+  const [logs, total] = await Promise.all([
+    prisma.activityLog.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    prisma.activityLog.count({ where }),
+  ]);
+
   const userIds = [...new Set(logs.map((l) => l.userId))];
   const users = await prisma.user.findMany({ where: { id: { in: userIds } } });
   const userMap = new Map(users.map((u) => [u.id, u.name]));
+
   return {
     logs: logs.map((l) => ({ ...l, userName: userMap.get(l.userId) ?? `Usuario ${l.userId}` })),
+    page,
+    totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    search,
   };
 }
 
 export default function ActivityAdmin({ loaderData }: Route.ComponentProps) {
-  const { logs } = loaderData;
+  const { logs, page, totalPages, search } = loaderData;
+  const [searchParams] = useSearchParams();
+  const navigation = useNavigation();
+  const [searchInput, setSearchInput] = useState(search);
+
+  function pageUrl(p: number) {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", String(p));
+    return `?${params.toString()}`;
+  }
+
   return (
     <div className="space-y-4">
-      <PageHeader title="Historial de actividad" description="Últimas 200 acciones registradas en el sistema." />
+      <PageHeader
+        title="Historial de actividad"
+        description={`Página ${page} de ${totalPages}.`}
+        action={
+          <Form method="get" className="flex gap-2">
+            <Input
+              name="search"
+              placeholder="Buscar por acción, entidad o detalle..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-64"
+            />
+            <Button type="submit" variant="outline" disabled={navigation.state === "loading"}>
+              Buscar
+            </Button>
+          </Form>
+        }
+      />
       {logs.length === 0 ? (
         <Card>
           <CardContent>
@@ -43,34 +100,44 @@ export default function ActivityAdmin({ loaderData }: Route.ComponentProps) {
           </CardContent>
         </Card>
       ) : (
-        <TableCard>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-4">Fecha</TableHead>
-                <TableHead>Usuario</TableHead>
-                <TableHead>Acción</TableHead>
-                <TableHead>Entidad</TableHead>
-                <TableHead className="pr-4">Detalle</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {logs.map((l) => (
-                <TableRow key={l.id}>
-                  <TableCell className="pl-4 text-muted-foreground">
-                    {format(new Date(l.createdAt), "dd/MM/yyyy HH:mm")}
-                  </TableCell>
-                  <TableCell className="font-medium">{l.userName}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{l.action}</Badge>
-                  </TableCell>
-                  <TableCell>{l.entity}</TableCell>
-                  <TableCell className="pr-4 text-muted-foreground">{l.detail}</TableCell>
+        <>
+          <TableCard>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-4">Fecha</TableHead>
+                  <TableHead>Usuario</TableHead>
+                  <TableHead>Acción</TableHead>
+                  <TableHead>Entidad</TableHead>
+                  <TableHead className="pr-4">Detalle</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableCard>
+              </TableHeader>
+              <TableBody>
+                {logs.map((l) => (
+                  <TableRow key={l.id}>
+                    <TableCell className="pl-4 text-muted-foreground">
+                      {format(new Date(l.createdAt), "dd/MM/yyyy HH:mm")}
+                    </TableCell>
+                    <TableCell className="font-medium">{l.userName}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{l.action}</Badge>
+                    </TableCell>
+                    <TableCell>{l.entity}</TableCell>
+                    <TableCell className="pr-4 text-muted-foreground">{l.detail}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableCard>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" disabled={page <= 1} asChild={page > 1}>
+              {page > 1 ? <a href={pageUrl(page - 1)}>Anterior</a> : <span>Anterior</span>}
+            </Button>
+            <Button variant="outline" size="sm" disabled={page >= totalPages} asChild={page < totalPages}>
+              {page < totalPages ? <a href={pageUrl(page + 1)}>Siguiente</a> : <span>Siguiente</span>}
+            </Button>
+          </div>
+        </>
       )}
     </div>
   );
