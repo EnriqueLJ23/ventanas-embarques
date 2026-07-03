@@ -5,6 +5,7 @@ import { logActivity } from "~/lib/activity.server";
 import { canArrive } from "~/lib/windowTransitions";
 import { sendEmail } from "~/services/email.server";
 import { WINDOW_TYPE_LABEL } from "~/lib/windowStatus";
+import { getRecipientEmails } from "~/lib/notificationRecipients.server";
 import { format } from "date-fns";
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -31,12 +32,12 @@ export async function action({ request, params }: Route.ActionArgs) {
     entityId: window.id,
   });
 
-  const recipient = process.env.ARRIVAL_NOTIFICATION_EMAIL;
-  if (recipient) {
+  const recipients = await getRecipientEmails("ARRIVAL");
+  if (recipients.length > 0) {
     try {
       await sendEmail({
         fromEmail: process.env.MAIL_SENDER!,
-        toAddresses: [recipient],
+        toAddresses: recipients,
         subject: "Unidad ingresó a planta",
         bodyHtml: `
           <p><strong>Folio:</strong> ${window.id}</p>
@@ -50,9 +51,13 @@ export async function action({ request, params }: Route.ActionArgs) {
       console.error("No se pudo enviar el correo de llegada:", err);
     }
   } else {
-    console.warn(
-      "ARRIVAL_NOTIFICATION_EMAIL no está configurado; se omite el correo de llegada."
-    );
+    await logActivity({
+      userId: user.id,
+      action: "NOTIFY_SKIPPED",
+      entity: "Window",
+      entityId: window.id,
+      detail: "Sin destinatarios configurados para el evento Llegada a planta",
+    });
   }
 
   return Response.json(window);
