@@ -27,6 +27,7 @@ import {
   type CalendarResource,
 } from "~/components/calendar/ShipmentCalendar";
 import { WindowQrDialog } from "~/components/qr/WindowQrDialog";
+import { WINDOW_TYPE_LABEL } from "~/lib/windowStatus";
 import { PageHeader } from "~/components/layout/PageHeader";
 import { Card, CardContent } from "~/components/ui/card";
 import { AlertTriangle, Plus } from "lucide-react";
@@ -77,6 +78,7 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
   const [time, setTime] = useState("");
   const [operatorName, setOperatorName] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
+  const [type, setType] = useState<"CARGA" | "DESCARGA" | "">("");
   const [conflict, setConflict] = useState<any>(null);
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [overrideReason, setOverrideReason] = useState("");
@@ -144,7 +146,7 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
   function resetForm() {
     setClientId(""); setWarehouseId(""); setWindowDate(date);
     setTime(""); setOperatorName(""); setLicensePlate("");
-    setConflict(null); setOverrideReason("");
+    setConflict(null); setOverrideReason(""); setType("");
   }
 
   async function handleSubmit() {
@@ -155,7 +157,7 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
       body: JSON.stringify({
         clientId, warehouseId,
         scheduledStart: start.toISOString(),
-        operatorName, licensePlate,
+        operatorName, licensePlate, type,
       }),
     });
     if (res.status === 409) {
@@ -284,6 +286,19 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
 
             <Separator />
 
+            <div className="space-y-1">
+              <Label>Tipo de operación</Label>
+              <Select value={type} onValueChange={(v) => setType(v as "CARGA" | "DESCARGA")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona Carga o Descarga" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CARGA">{WINDOW_TYPE_LABEL.CARGA}</SelectItem>
+                  <SelectItem value="DESCARGA">{WINDOW_TYPE_LABEL.DESCARGA}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex gap-3">
               <div className="space-y-1 flex-1">
                 <Label htmlFor="wdate">Fecha</Label>
@@ -338,7 +353,7 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
               className="w-full"
               onClick={handleSubmit}
               disabled={
-                !clientId || !warehouseId || !start || !operatorName || !licensePlate || !!conflict
+                !clientId || !warehouseId || !start || !operatorName || !licensePlate || !type || !!conflict
               }
             >
               Guardar ventana
