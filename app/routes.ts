@@ -15,6 +15,7 @@ export default [
 
     layout("./routes/admin/layout.tsx", [
       route("admin/warehouses", "./routes/admin/warehouses.tsx"),
+      route("admin/delay-reasons", "./routes/admin/delay-reasons.tsx"),
       route("admin/tiers", "./routes/admin/tiers.tsx"),
       route("admin/clients", "./routes/admin/clients.tsx"),
       route("admin/users", "./routes/admin/users.tsx"),
@@ -31,6 +32,7 @@ export default [
   route("logout", "./routes/auth/logout.tsx"),
 
   route("api/warehouses", "./routes/api/warehouses.ts"),
+  route("api/delay-reasons", "./routes/api/delay-reasons.ts"),
   route("api/tiers", "./routes/api/tiers.ts"),
   route("api/clients", "./routes/api/clients.ts"),
   route("api/users", "./routes/api/users.ts"),
