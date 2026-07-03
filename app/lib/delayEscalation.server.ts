@@ -3,6 +3,7 @@ import { sendEmail } from "~/services/email.server";
 import { WINDOW_TYPE_LABEL } from "~/lib/windowStatus";
 import { format } from "date-fns";
 import { DELAY_THRESHOLDS_MINUTES, getDelayThresholdToNotify } from "./delayThresholds";
+import { getRecipientEmails, delayMinutesToEvent } from "./notificationRecipients.server";
 
 const CHECK_INTERVAL_MS = 60_000;
 const MIN_THRESHOLD_MINUTES = DELAY_THRESHOLDS_MINUTES[0];
@@ -48,12 +49,13 @@ export async function checkDelays(): Promise<void> {
       },
     });
 
-    const recipient = process.env.ARRIVAL_NOTIFICATION_EMAIL;
-    if (recipient) {
+    const event = delayMinutesToEvent(threshold as 15 | 30 | 45 | 60);
+    const recipients = await getRecipientEmails(event);
+    if (recipients.length > 0) {
       try {
         await sendEmail({
           fromEmail: process.env.MAIL_SENDER!,
-          toAddresses: [recipient],
+          toAddresses: recipients,
           subject: `Unidad con ${threshold} minutos de retraso`,
           bodyHtml: `
             <p><strong>Folio:</strong> ${window.id}</p>
@@ -70,9 +72,15 @@ export async function checkDelays(): Promise<void> {
         console.error("No se pudo enviar el correo de retraso:", err);
       }
     } else {
-      console.warn(
-        "ARRIVAL_NOTIFICATION_EMAIL no está configurado; se omite el correo de retraso."
-      );
+      await prisma.activityLog.create({
+        data: {
+          userId: 0,
+          action: "NOTIFY_SKIPPED",
+          entity: "Window",
+          entityId: window.id,
+          detail: `Sin destinatarios configurados para el evento ${event}`,
+        },
+      });
     }
   }
 }
