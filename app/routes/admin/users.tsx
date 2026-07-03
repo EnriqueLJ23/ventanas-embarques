@@ -21,18 +21,13 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "~/components/ui/dialog";
 import { Badge } from "~/components/ui/badge";
 import { PageHeader } from "~/components/layout/PageHeader";
 import { EmptyState } from "~/components/layout/EmptyState";
 import { TableCard } from "~/components/layout/TableCard";
 import { Card, CardContent } from "~/components/ui/card";
+import { CrudFormDialog } from "~/components/admin/CrudFormDialog";
+import { UserSearchCombobox } from "~/components/admin/UserSearchCombobox";
 import { ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@prisma/client";
@@ -62,6 +57,7 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("VENTAS");
+  const [manualEntry, setManualEntry] = useState(false);
 
   // Edit form state
   const [editRole, setEditRole] = useState<string>("VENTAS");
@@ -69,6 +65,13 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
   function openEdit(u: User) {
     setEditTarget(u);
     setEditRole(u.role);
+  }
+
+  function resetCreateForm() {
+    setEmail("");
+    setName("");
+    setRole("VENTAS");
+    setManualEntry(false);
   }
 
   async function handleCreate() {
@@ -80,7 +83,7 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
     if (!res.ok) { toast.error("No se pudo crear el usuario"); return; }
     toast.success("Usuario creado");
     setCreateOpen(false);
-    setEmail(""); setName(""); setRole("VENTAS");
+    resetCreateForm();
     navigate(".", { replace: true });
   }
 
@@ -111,17 +114,38 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
     <div className="space-y-4">
       <PageHeader
         title="Usuarios"
-        description="Cuentas con acceso al sistema y su rol asignado."
+        description="Cuentas con acceso al sistema y su rol asignado. Solo el administrador puede crear cuentas."
         action={
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>Nuevo usuario</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Nuevo usuario</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
+          <CrudFormDialog
+            trigger={<Button>Nuevo usuario</Button>}
+            title="Nuevo usuario"
+            open={createOpen}
+            onOpenChange={(o) => { setCreateOpen(o); if (!o) resetCreateForm(); }}
+            onSave={handleCreate}
+            saveDisabled={!email || !name}
+          >
+            {!manualEntry ? (
+              <div className="space-y-2">
+                <Label>Buscar en el directorio</Label>
+                <UserSearchCombobox
+                  onSelect={(u) => { setName(u.name); setEmail(u.email); }}
+                />
+                {(name || email) && (
+                  <div className="rounded-md border p-2 text-sm">
+                    <p className="font-medium">{name}</p>
+                    <p className="text-muted-foreground">{email}</p>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground underline"
+                  onClick={() => setManualEntry(true)}
+                >
+                  Ingresar datos manualmente
+                </button>
+              </div>
+            ) : (
+              <>
                 <div className="space-y-1">
                   <Label htmlFor="email">Correo</Label>
                   <Input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -130,42 +154,18 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
                   <Label htmlFor="uname">Nombre</Label>
                   <Input id="uname" value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
-                <div className="space-y-1">
-                  <Label>Rol</Label>
-                  <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ROLES.map((r) => (
-                        <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={handleCreate} disabled={!email || !name}>Guardar</Button>
-                  <Button variant="ghost" onClick={() => setCreateOpen(false)}>Cancelar</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        }
-      />
-
-      {/* Edit role dialog */}
-      <Dialog open={!!editTarget} onOpenChange={(o) => !o && setEditTarget(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar usuario</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              {editTarget?.name} — {editTarget?.email}
-            </p>
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground underline"
+                  onClick={() => setManualEntry(false)}
+                >
+                  Volver a la búsqueda del directorio
+                </button>
+              </>
+            )}
             <div className="space-y-1">
               <Label>Rol</Label>
-              <Select value={editRole} onValueChange={setEditRole}>
+              <Select value={role} onValueChange={setRole}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -176,13 +176,33 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={handleEditSave}>Guardar</Button>
-              <Button variant="ghost" onClick={() => setEditTarget(null)}>Cancelar</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </CrudFormDialog>
+        }
+      />
+
+      <CrudFormDialog
+        title="Editar usuario"
+        open={!!editTarget}
+        onOpenChange={(o) => !o && setEditTarget(null)}
+        onSave={handleEditSave}
+      >
+        <p className="text-sm text-muted-foreground">
+          {editTarget?.name} — {editTarget?.email}
+        </p>
+        <div className="space-y-1">
+          <Label>Rol</Label>
+          <Select value={editRole} onValueChange={setEditRole}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ROLES.map((r) => (
+                <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CrudFormDialog>
 
       {users.length === 0 ? (
         <Card>
