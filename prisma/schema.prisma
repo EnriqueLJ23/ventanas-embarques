@@ -129,3 +129,21 @@ model ActivityLog {
   detail    String?
   createdAt DateTime @default(now())
 }
+
+enum NotificationEvent {
+  ARRIVAL
+  DELAY_15
+  DELAY_30
+  DELAY_45
+  DELAY_60
+}
+
+model NotificationRecipient {
+  id        String            @id @default(cuid())
+  event     NotificationEvent
+  email     String
+  active    Boolean           @default(true)
+  createdAt DateTime          @default(now())
+
+  @@unique([event, email])
+}
