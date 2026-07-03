@@ -19,8 +19,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "~/components/ui/dialog";
+import { CrudFormDialog } from "~/components/admin/CrudFormDialog";
 import { Badge } from "~/components/ui/badge";
 import { PageHeader } from "~/components/layout/PageHeader";
 import { EmptyState } from "~/components/layout/EmptyState";
@@ -103,63 +103,51 @@ export default function TiersAdmin({ loaderData }: Route.ComponentProps) {
         title="Tiers"
         description="Niveles de prioridad para clientes. Tier 1 = mayor prioridad."
         action={
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>Nuevo tier</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Nuevo tier</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label htmlFor="name">Nombre</Label>
-                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="priority">Prioridad (1 = mayor)</Label>
-                  <Input id="priority" type="number" value={priority} onChange={(e) => setPriority(e.target.value)} />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="description">Descripción</Label>
-                  <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={handleCreate} disabled={!name || !priority}>Guardar</Button>
-                  <Button variant="ghost" onClick={() => setCreateOpen(false)}>Cancelar</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <CrudFormDialog
+            trigger={<Button>Nuevo tier</Button>}
+            title="Nuevo tier"
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+            onSave={handleCreate}
+            saveDisabled={!name || !priority}
+          >
+            <div className="space-y-1">
+              <Label htmlFor="name">Nombre</Label>
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="priority">Prioridad (1 = mayor)</Label>
+              <Input id="priority" type="number" value={priority} onChange={(e) => setPriority(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="description">Descripción</Label>
+              <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+          </CrudFormDialog>
         }
       />
 
       {/* Edit dialog */}
-      <Dialog open={!!editTarget} onOpenChange={(o) => !o && setEditTarget(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar tier</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label htmlFor="editName">Nombre</Label>
-              <Input id="editName" value={editName} onChange={(e) => setEditName(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="editPriority">Prioridad (1 = mayor)</Label>
-              <Input id="editPriority" type="number" value={editPriority} onChange={(e) => setEditPriority(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="editDescription">Descripción</Label>
-              <Input id="editDescription" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleEdit} disabled={!editName || !editPriority}>Guardar</Button>
-              <Button variant="ghost" onClick={() => setEditTarget(null)}>Cancelar</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CrudFormDialog
+        title="Editar tier"
+        open={!!editTarget}
+        onOpenChange={(o) => !o && setEditTarget(null)}
+        onSave={handleEdit}
+        saveDisabled={!editName || !editPriority}
+      >
+        <div className="space-y-1">
+          <Label htmlFor="editName">Nombre</Label>
+          <Input id="editName" value={editName} onChange={(e) => setEditName(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="editPriority">Prioridad (1 = mayor)</Label>
+          <Input id="editPriority" type="number" value={editPriority} onChange={(e) => setEditPriority(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="editDescription">Descripción</Label>
+          <Input id="editDescription" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+        </div>
+      </CrudFormDialog>
 
       {/* Delete confirmation dialog */}
       <Dialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
