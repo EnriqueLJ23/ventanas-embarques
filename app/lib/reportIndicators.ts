@@ -1,6 +1,5 @@
-import type { WindowStatus, WindowType, DelayReasonCategory } from "@prisma/client";
+import type { WindowStatus, WindowType } from "@prisma/client";
 import { DELAY_THRESHOLDS_MINUTES } from "./delayThresholds";
-import { DELAY_REASON_CATEGORY_LABEL } from "./delayReasons";
 
 export const PUNTUALIDAD_THRESHOLD_MINUTES = DELAY_THRESHOLDS_MINUTES[0];
 
@@ -12,7 +11,7 @@ export interface WindowForIndicators {
   actualArrival: Date | null;
   actualStart: Date | null;
   actualEnd: Date | null;
-  delayReasonCategory: DelayReasonCategory | null;
+  delayReasonCategory: { id: string; label: string } | null;
 }
 
 function isPuntual(w: WindowForIndicators): boolean {
@@ -93,16 +92,14 @@ export function computeRetrasos(windows: WindowForIndicators[]) {
     .filter(([, v]) => v.incidents > 0)
     .map(([clientName, v]) => ({ clientName, count: v.incidents }));
 
-  const porMotivoMap = new Map<DelayReasonCategory, number>();
+  const porMotivoMap = new Map<string, { label: string; count: number }>();
   for (const w of windows) {
     if (!w.delayReasonCategory) continue;
-    porMotivoMap.set(w.delayReasonCategory, (porMotivoMap.get(w.delayReasonCategory) ?? 0) + 1);
+    const entry = porMotivoMap.get(w.delayReasonCategory.id) ?? { label: w.delayReasonCategory.label, count: 0 };
+    entry.count += 1;
+    porMotivoMap.set(w.delayReasonCategory.id, entry);
   }
-  const porMotivo = [...porMotivoMap.entries()].map(([category, count]) => ({
-    category,
-    label: DELAY_REASON_CATEGORY_LABEL[category],
-    count,
-  }));
+  const porMotivo = [...porMotivoMap.entries()].map(([id, v]) => ({ id, label: v.label, count: v.count }));
 
   const masPuntuales = [...byClient.entries()]
     .filter(([, v]) => v.attended > 0)

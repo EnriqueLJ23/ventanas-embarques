@@ -2,7 +2,6 @@ import ExcelJS from "exceljs";
 import type { Route } from "./+types/reports.export";
 import { requireUser } from "~/lib/session.server";
 import { prisma } from "~/lib/db.server";
-import { DELAY_REASON_CATEGORY_LABEL } from "~/lib/delayReasons";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
@@ -12,7 +11,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const windows = await prisma.window.findMany({
     where: from && to ? { scheduledStart: { gte: new Date(from), lte: new Date(to) } } : {},
-    include: { client: true, warehouse: true },
+    include: { client: true, warehouse: true, delayReasonCategory: true },
     orderBy: { scheduledStart: "asc" },
   });
 
@@ -45,7 +44,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       w.scheduledStart.toISOString(), w.scheduledEnd.toISOString(),
       w.actualStart?.toISOString() ?? "", w.actualEnd?.toISOString() ?? "",
       w.operatorName, w.licensePlate, w.rollsCount ?? "", w.status,
-      w.delayReasonCategory ? DELAY_REASON_CATEGORY_LABEL[w.delayReasonCategory] : "",
+      w.delayReasonCategory?.label ?? "",
       w.delayReason ?? "",
     ]);
   }
@@ -57,7 +56,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       w.client.name,
       w.warehouse.name,
       w.scheduledStart.toISOString(),
-      DELAY_REASON_CATEGORY_LABEL[w.delayReasonCategory!],
+      w.delayReasonCategory!.label,
       w.delayReason ?? "",
     ]);
   }

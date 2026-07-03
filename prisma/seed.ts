@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+import { DEFAULT_DELAY_REASONS } from "../app/lib/delayReasons";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -33,6 +34,16 @@ async function main() {
       create: { name: "Tier 3", priority: 3, description: "Clientes ocasionales" },
     }),
   ]);
+
+  await Promise.all(
+    DEFAULT_DELAY_REASONS.map((label) =>
+      prisma.delayReason.upsert({
+        where: { label },
+        update: {},
+        create: { label },
+      })
+    )
+  );
 
   const clientSeeds = [
     { name: "Acero del Norte", tier: tiers[0], avgLoadTime: 60, preferredWarehouse: warehouses[0].id, defaultArrivalTime: "08:00" },

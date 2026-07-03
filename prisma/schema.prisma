@@ -71,7 +71,8 @@ model Window {
   actualEnd       DateTime?
   rollsCount      Int?
   delayReason     String?
-  delayReasonCategory DelayReasonCategory?
+  delayReasonId   String?
+  delayReasonCategory DelayReason? @relation(fields: [delayReasonId], references: [id])
   lastDelayNotifiedMinutes Int?
   overrideRequest OverrideRequest?
   type            WindowType       @default(CARGA)
@@ -93,11 +94,12 @@ enum WindowType {
   DESCARGA
 }
 
-enum DelayReasonCategory {
-  FALTA_MATERIAL_PT
-  RETRASO_OPERACION
-  CAMBIO_REQUERIMIENTO
-  OTRO
+model DelayReason {
+  id        String   @id @default(cuid())
+  label     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  windows   Window[]
 }
 
 model OverrideRequest {

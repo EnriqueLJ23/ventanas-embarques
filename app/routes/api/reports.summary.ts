@@ -38,7 +38,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const [windows, unidadesEnPlanta, unidadesPendientes] = await Promise.all([
     prisma.window.findMany({
       where,
-      include: { client: true, warehouse: true },
+      include: { client: true, warehouse: true, delayReasonCategory: true },
       orderBy: { scheduledStart: "asc" },
     }),
     prisma.window.count({
@@ -77,7 +77,9 @@ export async function loader({ request }: Route.LoaderArgs) {
     actualArrival: w.actualArrival,
     actualStart: w.actualStart,
     actualEnd: w.actualEnd,
-    delayReasonCategory: w.delayReasonCategory,
+    delayReasonCategory: w.delayReasonCategory
+      ? { id: w.delayReasonCategory.id, label: w.delayReasonCategory.label }
+      : null,
   }));
 
   return Response.json({

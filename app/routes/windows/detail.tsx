@@ -20,7 +20,6 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { PageHeader } from "~/components/layout/PageHeader";
 import { WINDOW_STATUS_BADGE_VARIANT, WINDOW_STATUS_LABEL } from "~/lib/windowStatus";
-import { DELAY_REASON_CATEGORY_LABEL } from "~/lib/delayReasons";
 import {
   Select,
   SelectContent,
@@ -32,20 +31,28 @@ import { QrCode } from "lucide-react";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   await requireUser(request);
-  const window = await prisma.window.findUniqueOrThrow({
-    where: { id: params.id },
-    include: { client: { include: { tier: true } }, warehouse: true, overrideRequest: true },
-  });
-  return { window };
+  const [window, delayReasons] = await Promise.all([
+    prisma.window.findUniqueOrThrow({
+      where: { id: params.id },
+      include: {
+        client: { include: { tier: true } },
+        warehouse: true,
+        overrideRequest: true,
+        delayReasonCategory: true,
+      },
+    }),
+    prisma.delayReason.findMany({ where: { active: true }, orderBy: { label: "asc" } }),
+  ]);
+  return { window, delayReasons };
 }
 
 export default function WindowDetail({ loaderData }: Route.ComponentProps) {
-  const { window } = loaderData;
+  const { window, delayReasons } = loaderData;
   const navigate = useNavigate();
   const [qrOpen, setQrOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
   const [rollsCount, setRollsCount] = useState("");
-  const [delayReasonCategory, setDelayReasonCategory] = useState("");
+  const [delayReasonId, setDelayReasonId] = useState("");
   const [delayReason, setDelayReason] = useState("");
   const [needsDelayReason, setNeedsDelayReason] = useState(false);
 
@@ -75,7 +82,7 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         rollsCount,
-        delayReasonCategory: delayReasonCategory || undefined,
+        delayReasonId: delayReasonId || undefined,
         delayReason: delayReason || undefined,
       }),
     });
@@ -150,10 +157,7 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
               <Field label="Rollos embarcados" value={window.rollsCount} />
             )}
             {window.delayReasonCategory && (
-              <Field
-                label="Motivo de retraso"
-                value={DELAY_REASON_CATEGORY_LABEL[window.delayReasonCategory]}
-              />
+              <Field label="Motivo de retraso" value={window.delayReasonCategory.label} />
             )}
             {window.delayReason && (
               <Field label="Detalle adicional" value={window.delayReason} />
@@ -180,15 +184,15 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
             {needsDelayReason && (
               <>
                 <div className="space-y-1">
-                  <Label htmlFor="delayReasonCategory">Motivo del retraso</Label>
-                  <Select value={delayReasonCategory} onValueChange={setDelayReasonCategory}>
-                    <SelectTrigger id="delayReasonCategory">
+                  <Label htmlFor="delayReasonId">Motivo del retraso</Label>
+                  <Select value={delayReasonId} onValueChange={setDelayReasonId}>
+                    <SelectTrigger id="delayReasonId">
                       <SelectValue placeholder="Selecciona un motivo" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(DELAY_REASON_CATEGORY_LABEL).map(([value, label]) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
+                      {delayReasons.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -206,7 +210,7 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
             )}
             <Button
               onClick={handleComplete}
-              disabled={!rollsCount || (needsDelayReason && !delayReasonCategory)}
+              disabled={!rollsCount || (needsDelayReason && !delayReasonId)}
             >
               Confirmar
             </Button>

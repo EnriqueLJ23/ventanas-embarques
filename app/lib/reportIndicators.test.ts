@@ -142,12 +142,12 @@ describe("computeRetrasos", () => {
     const w = makeWindow({
       clientName: "Cliente A",
       actualArrival: BASE_START,
-      delayReasonCategory: "FALTA_MATERIAL_PT",
+      delayReasonCategory: { id: "delayreason_falta_material_pt", label: "Falta de material en PT" },
     });
     const result = computeRetrasos([w]);
     expect(result.porTransportista).toEqual([{ clientName: "Cliente A", count: 1 }]);
     expect(result.porMotivo).toEqual([
-      { category: "FALTA_MATERIAL_PT", label: "Falta de material en PT", count: 1 },
+      { id: "delayreason_falta_material_pt", label: "Falta de material en PT", count: 1 },
     ]);
   });
 
@@ -165,7 +165,7 @@ describe("computeRetrasos", () => {
     const w = makeWindow({
       clientName: "Cliente A",
       actualArrival: minutesAfter(BASE_START, PUNTUALIDAD_THRESHOLD_MINUTES + 5),
-      delayReasonCategory: "CAMBIO_REQUERIMIENTO",
+      delayReasonCategory: { id: "delayreason_cambio_requerimiento", label: "Cambio de requerimiento" },
     });
     const result = computeRetrasos([w]);
     expect(result.porTransportista).toEqual([{ clientName: "Cliente A", count: 1 }]);
@@ -195,10 +195,10 @@ describe("computeRetrasos", () => {
 
   it("ranks masIncidencias by count descending", () => {
     const twoIncidents = [
-      makeWindow({ clientName: "Cliente A", delayReasonCategory: "OTRO" }),
-      makeWindow({ clientName: "Cliente A", delayReasonCategory: "OTRO" }),
+      makeWindow({ clientName: "Cliente A", delayReasonCategory: { id: "delayreason_otro", label: "Otro" } }),
+      makeWindow({ clientName: "Cliente A", delayReasonCategory: { id: "delayreason_otro", label: "Otro" } }),
     ];
-    const oneIncident = [makeWindow({ clientName: "Cliente B", delayReasonCategory: "OTRO" })];
+    const oneIncident = [makeWindow({ clientName: "Cliente B", delayReasonCategory: { id: "delayreason_otro", label: "Otro" } })];
     const result = computeRetrasos([...twoIncidents, ...oneIncident]);
     expect(result.masIncidencias[0]).toEqual({ clientName: "Cliente A", count: 2 });
     expect(result.masIncidencias[1]).toEqual({ clientName: "Cliente B", count: 1 });

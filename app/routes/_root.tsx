@@ -36,7 +36,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         prisma.window.count({ where: { scheduledStart: { gte: todayStart, lte: todayEnd }, status: "SCHEDULED" } }),
         prisma.window.count({ where: { scheduledStart: { gte: todayStart, lte: todayEnd }, status: "IN_PROGRESS" } }),
         prisma.window.count({ where: { scheduledStart: { gte: todayStart, lte: todayEnd }, status: "COMPLETED" } }),
-        prisma.window.count({ where: { scheduledStart: { gte: todayStart, lte: todayEnd }, delayReasonCategory: { not: null } } }),
+        prisma.window.count({ where: { scheduledStart: { gte: todayStart, lte: todayEnd }, delayReasonId: { not: null } } }),
         prisma.warehouse.findMany({ orderBy: { name: "asc" } }),
         prisma.window.findMany({ where: { scheduledStart: { gte: todayStart, lte: todayEnd } }, select: { warehouseId: true } }),
         prisma.overrideRequest.findMany({
