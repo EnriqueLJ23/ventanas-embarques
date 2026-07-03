@@ -37,12 +37,12 @@ import { Users } from "lucide-react";
 import { toast } from "sonner";
 import type { Tier, Client } from "@prisma/client";
 
-type ClientWithTier = Client & { tier: Tier };
+type ClientWithTier = Client & { tier: Tier; preferredWarehouseRef: { id: string; name: string } | null };
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
   const [clients, tiers, warehouses] = await Promise.all([
-    prisma.client.findMany({ include: { tier: true }, orderBy: { name: "asc" } }),
+    prisma.client.findMany({ include: { tier: true, preferredWarehouseRef: true }, orderBy: { name: "asc" } }),
     prisma.tier.findMany({ orderBy: { priority: "asc" } }),
     prisma.warehouse.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
   ]);
@@ -65,13 +65,13 @@ function ClientForm({
   const [name, setName] = useState(initial?.name ?? "");
   const [tierId, setTierId] = useState(initial?.tierId ?? "");
   const [avgLoadTime, setAvgLoadTime] = useState(String(initial?.avgLoadTime ?? ""));
-  const [preferredWarehouse, setPreferredWarehouse] = useState(initial?.preferredWarehouse ?? "");
+  const [preferredWarehouseId, setPreferredWarehouseId] = useState(initial?.preferredWarehouseId ?? "");
   const [defaultArrivalTime, setDefaultArrivalTime] = useState(initial?.defaultArrivalTime ?? "");
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
     setSaving(true);
-    await onSave({ name, tierId, avgLoadTime, preferredWarehouse, defaultArrivalTime });
+    await onSave({ name, tierId, avgLoadTime, preferredWarehouseId, defaultArrivalTime });
     setSaving(false);
   }
 
@@ -108,8 +108,8 @@ function ClientForm({
       <div className="space-y-1">
         <Label>Nave preferida</Label>
         <Select
-          value={preferredWarehouse || "__none__"}
-          onValueChange={(v) => setPreferredWarehouse(v === "__none__" ? "" : v)}
+          value={preferredWarehouseId || "__none__"}
+          onValueChange={(v) => setPreferredWarehouseId(v === "__none__" ? "" : v)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Sin preferencia" />
@@ -117,7 +117,7 @@ function ClientForm({
           <SelectContent>
             <SelectItem value="__none__">Sin preferencia</SelectItem>
             {warehouses.map((w) => (
-              <SelectItem key={w.id} value={w.name}>
+              <SelectItem key={w.id} value={w.id}>
                 {w.name}
               </SelectItem>
             ))}
@@ -258,7 +258,7 @@ export default function ClientsAdmin({ loaderData }: Route.ComponentProps) {
                   </TableCell>
                   <TableCell>{c.avgLoadTime} min</TableCell>
                   <TableCell className="text-muted-foreground">
-                    {c.preferredWarehouse ?? "—"}
+                    {c.preferredWarehouseRef?.name ?? "—"}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {c.defaultArrivalTime ?? "—"}

@@ -46,11 +46,11 @@ async function main() {
   );
 
   const clientSeeds = [
-    { name: "Acero del Norte", tier: tiers[0], avgLoadTime: 60, preferredWarehouse: warehouses[0].id, defaultArrivalTime: "08:00" },
-    { name: "Textiles Monterrey", tier: tiers[0], avgLoadTime: 45, preferredWarehouse: warehouses[1].id, defaultArrivalTime: "09:00" },
-    { name: "Distribuidora Sureste", tier: tiers[1], avgLoadTime: 90, preferredWarehouse: warehouses[2].id, defaultArrivalTime: "10:00" },
-    { name: "Logística Bajío", tier: tiers[1], avgLoadTime: 30, preferredWarehouse: warehouses[3].id, defaultArrivalTime: "11:00" },
-    { name: "Comercial Pacífico", tier: tiers[2], avgLoadTime: 75, preferredWarehouse: warehouses[0].id, defaultArrivalTime: "13:00" },
+    { name: "Acero del Norte", tier: tiers[0], avgLoadTime: 60, preferredWarehouseId: warehouses[0].id, defaultArrivalTime: "08:00" },
+    { name: "Textiles Monterrey", tier: tiers[0], avgLoadTime: 45, preferredWarehouseId: warehouses[1].id, defaultArrivalTime: "09:00" },
+    { name: "Distribuidora Sureste", tier: tiers[1], avgLoadTime: 90, preferredWarehouseId: warehouses[2].id, defaultArrivalTime: "10:00" },
+    { name: "Logística Bajío", tier: tiers[1], avgLoadTime: 30, preferredWarehouseId: warehouses[3].id, defaultArrivalTime: "11:00" },
+    { name: "Comercial Pacífico", tier: tiers[2], avgLoadTime: 75, preferredWarehouseId: warehouses[0].id, defaultArrivalTime: "13:00" },
   ];
 
   for (const c of clientSeeds) {
@@ -61,7 +61,7 @@ async function main() {
         name: c.name,
         tierId: c.tier.id,
         avgLoadTime: c.avgLoadTime,
-        preferredWarehouse: c.preferredWarehouse,
+        preferredWarehouseId: c.preferredWarehouseId,
         defaultArrivalTime: c.defaultArrivalTime,
       },
     });

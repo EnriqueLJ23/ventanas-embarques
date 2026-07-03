@@ -33,25 +33,27 @@ model Tier {
 }
 
 model Client {
-  id                 String    @id @default(cuid())
-  name               String    @unique
-  tierId             String
-  tier               Tier      @relation(fields: [tierId], references: [id])
-  avgLoadTime        Int
-  preferredWarehouse String?
-  defaultArrivalTime String?
-  active             Boolean   @default(true)
-  windows            Window[]
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id                    String     @id @default(cuid())
+  name                  String     @unique
+  tierId                String
+  tier                  Tier       @relation(fields: [tierId], references: [id])
+  avgLoadTime           Int
+  preferredWarehouseId  String?
+  preferredWarehouseRef Warehouse? @relation(fields: [preferredWarehouseId], references: [id])
+  defaultArrivalTime    String?
+  active                Boolean    @default(true)
+  windows               Window[]
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
 }
 
 model Warehouse {
-  id      String   @id @default(cuid())
-  name    String   @unique
-  code    String   @unique
-  active  Boolean  @default(true)
-  windows Window[]
+  id                 String   @id @default(cuid())
+  name               String   @unique
+  code               String   @unique
+  active             Boolean  @default(true)
+  windows            Window[]
+  preferredByClients Client[]
 }
 
 model Window {

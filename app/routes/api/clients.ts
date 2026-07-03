@@ -23,7 +23,7 @@ export async function action({ request }: Route.ActionArgs) {
         name: body.name,
         tierId: body.tierId,
         avgLoadTime: Number(body.avgLoadTime),
-        preferredWarehouse: body.preferredWarehouse ?? null,
+        preferredWarehouseId: body.preferredWarehouseId ?? null,
         defaultArrivalTime: body.defaultArrivalTime ?? null,
         active: body.active ?? undefined,
       },
@@ -36,7 +36,7 @@ export async function action({ request }: Route.ActionArgs) {
       name: body.name,
       tierId: body.tierId,
       avgLoadTime: Number(body.avgLoadTime),
-      preferredWarehouse: body.preferredWarehouse ?? null,
+      preferredWarehouseId: body.preferredWarehouseId ?? null,
       defaultArrivalTime: body.defaultArrivalTime ?? null,
     },
   });
