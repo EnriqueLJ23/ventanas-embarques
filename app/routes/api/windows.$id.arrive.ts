@@ -1,5 +1,5 @@
 import type { Route } from "./+types/windows.$id.arrive";
-import { requireUser } from "~/lib/session.server";
+import { getOptionalUserId } from "~/lib/session.server";
 import { prisma } from "~/lib/db.server";
 import { logActivity } from "~/lib/activity.server";
 import { canArrive } from "~/lib/windowTransitions";
@@ -9,7 +9,7 @@ import { getRecipientEmails } from "~/lib/notificationRecipients.server";
 import { format } from "date-fns";
 
 export async function action({ request, params }: Route.ActionArgs) {
-  const user = await requireUser(request, ["CARGA", "DESCARGA", "ADMINISTRADOR"]);
+  const userId = (await getOptionalUserId(request)) ?? 0;
 
   const existing = await prisma.window.findUniqueOrThrow({
     where: { id: params.id },
@@ -26,7 +26,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   });
 
   await logActivity({
-    userId: user.id,
+    userId,
     action: "ARRIVE",
     entity: "Window",
     entityId: window.id,
@@ -52,7 +52,7 @@ export async function action({ request, params }: Route.ActionArgs) {
     }
   } else {
     await logActivity({
-      userId: user.id,
+      userId,
       action: "NOTIFY_SKIPPED",
       entity: "Window",
       entityId: window.id,

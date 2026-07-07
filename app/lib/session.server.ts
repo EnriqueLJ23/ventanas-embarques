@@ -78,3 +78,8 @@ export async function requireUser(
   }
   return user;
 }
+
+export async function getOptionalUserId(request: Request): Promise<number | null> {
+  const session = await getSession(request.headers.get("Cookie"));
+  return session.get("userId") ?? null;
+}

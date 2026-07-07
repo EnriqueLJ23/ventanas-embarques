@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/checkin";
-import { requireUser } from "~/lib/session.server";
 import { prisma } from "~/lib/db.server";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
@@ -11,8 +10,7 @@ import { format } from "date-fns";
 import { WINDOW_STATUS_BADGE_VARIANT, WINDOW_STATUS_LABEL } from "~/lib/windowStatus";
 import { CheckCircle2 } from "lucide-react";
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  await requireUser(request, ["CARGA", "DESCARGA", "ADMINISTRADOR", "GUARDIA"]);
+export async function loader({ params }: Route.LoaderArgs) {
   const window = await prisma.window.findUniqueOrThrow({
     where: { id: params.id },
     include: { client: true, warehouse: true },

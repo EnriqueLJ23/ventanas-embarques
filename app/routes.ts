@@ -10,7 +10,6 @@ export default [
     index("./routes/_root.tsx"),
     route("calendar", "./routes/calendar.tsx"),
     route("windows/:id", "./routes/windows/detail.tsx"),
-    route("checkin/:id", "./routes/checkin.tsx"),
     route("reports", "./routes/reports.tsx"),
 
     layout("./routes/admin/layout.tsx", [
@@ -30,6 +29,8 @@ export default [
   ]),
 
   route("logout", "./routes/auth/logout.tsx"),
+
+  route("checkin/:id", "./routes/checkin.tsx"),
 
   route("api/warehouses", "./routes/api/warehouses.ts"),
   route("api/delay-reasons", "./routes/api/delay-reasons.ts"),
