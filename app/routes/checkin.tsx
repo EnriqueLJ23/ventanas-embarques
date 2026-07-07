@@ -12,7 +12,7 @@ import { WINDOW_STATUS_BADGE_VARIANT, WINDOW_STATUS_LABEL } from "~/lib/windowSt
 import { CheckCircle2 } from "lucide-react";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
-  await requireUser(request, ["CARGA", "DESCARGA", "ADMINISTRADOR"]);
+  await requireUser(request, ["CARGA", "DESCARGA", "ADMINISTRADOR", "GUARDIA"]);
   const window = await prisma.window.findUniqueOrThrow({
     where: { id: params.id },
     include: { client: true, warehouse: true },
