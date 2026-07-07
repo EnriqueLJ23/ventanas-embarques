@@ -7,3 +7,7 @@
 /build/
 
 /generated/prisma
+
+# Nested git worktree — has its own .git file, not meant to be tracked as plain files
+.claude/worktrees/
+.claude/settings.local.json
