@@ -64,6 +64,7 @@ const ROLE_LABEL: Record<Role, string> = {
   CARGA: "Carga",
   DESCARGA: "Descarga",
   ADMINISTRADOR: "Administrador",
+  GUARDIA: "Guardia",
 };
 
 function NavLinkItem({ item, pathname }: { item: NavItem; pathname: string }) {
@@ -102,7 +103,10 @@ export function AppSidebar({ role }: { role: Role }) {
           <SidebarGroupLabel>Operación</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {operationItems.map((item) => (
+              {(role === "GUARDIA"
+                ? operationItems.filter((item) => item.to === "/")
+                : operationItems
+              ).map((item) => (
                 <NavLinkItem key={item.to} item={item} pathname={pathname} />
               ))}
             </SidebarMenu>
