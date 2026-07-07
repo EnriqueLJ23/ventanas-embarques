@@ -15,13 +15,14 @@ enum Role {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String   @default("")
-  role      Role     @default(VENTAS)
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                     Int                      @id @default(autoincrement())
+  email                  String                   @unique
+  name                   String                   @default("")
+  role                   Role                     @default(VENTAS)
+  active                 Boolean                  @default(true)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  notificationRecipients NotificationRecipient[]
 }
 
 model Tier {
@@ -144,9 +145,10 @@ enum NotificationEvent {
 model NotificationRecipient {
   id        String            @id @default(cuid())
   event     NotificationEvent
-  email     String
+  userId    Int
+  user      User              @relation(fields: [userId], references: [id])
   active    Boolean           @default(true)
   createdAt DateTime          @default(now())
 
-  @@unique([event, email])
+  @@unique([event, userId])
 }
