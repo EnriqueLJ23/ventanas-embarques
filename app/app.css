@@ -174,3 +174,18 @@ body {
 .fc .fc-timeline-slot-frame {
   border-color: var(--border);
 }
+
+/* Visually separate the resource (naves) column from the timeline lanes,
+   and the hour header row from the event rows below it. */
+.fc .fc-datagrid-header,
+.fc .fc-datagrid-body {
+  background-color: var(--sidebar);
+}
+.fc .fc-datagrid-header .fc-datagrid-cell-frame,
+.fc .fc-datagrid-body .fc-datagrid-cell-frame {
+  border-right: 1px solid var(--border);
+}
+.fc .fc-timeline-header {
+  background-color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
