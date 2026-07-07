@@ -218,7 +218,7 @@ export default function Reports() {
                       </TableRow>
                     )}
                     {summary.retrasos.porMotivo.map((row: any) => (
-                      <TableRow key={row.category}>
+                      <TableRow key={row.id}>
                         <TableCell className="pl-4">{row.label}</TableCell>
                         <TableCell className="pr-4">{row.count}</TableCell>
                       </TableRow>
