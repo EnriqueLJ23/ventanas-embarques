@@ -11,6 +11,7 @@ enum Role {
   CARGA
   DESCARGA
   ADMINISTRADOR
+  GUARDIA
 }
 
 model User {
