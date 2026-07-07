@@ -47,9 +47,6 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 # package.json is read by react-router-serve at startup
 COPY --from=builder /app/package.json ./package.json
 
-# Variables de entorno embebidas en la imagen
-COPY --from=builder /app/.env ./.env
-
 # Entrypoint: runs DB migrations then starts the server
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
