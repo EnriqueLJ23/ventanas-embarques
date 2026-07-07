@@ -34,7 +34,11 @@ export async function action({ request }: Route.ActionArgs) {
     return Response.json({ error: "client_not_found" }, { status: 400 });
   }
 
-  const warehouse = await prisma.warehouse.findUnique({ where: { id: body.warehouseId } });
+  const warehouseId = body.warehouseId ?? client.preferredWarehouseId;
+  if (!warehouseId) {
+    return Response.json({ error: "warehouse_required" }, { status: 400 });
+  }
+  const warehouse = await prisma.warehouse.findUnique({ where: { id: warehouseId } });
   if (!warehouse) {
     return Response.json({ error: "warehouse_not_found" }, { status: 400 });
   }
@@ -47,24 +51,17 @@ export async function action({ request }: Route.ActionArgs) {
   const scheduledEnd = new Date(scheduledStart.getTime() + client.avgLoadTime * 60000);
 
   const sameWarehouseWindows = await prisma.window.findMany({
-    where: { warehouseId: body.warehouseId, status: { not: "CANCELLED" } },
+    where: { warehouseId, status: { not: "CANCELLED" } },
   });
   const conflict = findOverlappingWindow(
-    { warehouseId: body.warehouseId, scheduledStart, scheduledEnd },
+    { warehouseId, scheduledStart, scheduledEnd },
     sameWarehouseWindows
   );
-  if (conflict) {
-    const conflictWindow = await prisma.window.findUnique({
-      where: { id: conflict.id },
-      include: { client: true },
-    });
-    return Response.json({ conflict: conflictWindow }, { status: 409 });
-  }
 
   const window = await prisma.window.create({
     data: {
       clientId: body.clientId,
-      warehouseId: body.warehouseId,
+      warehouseId,
       scheduledStart,
       scheduledEnd,
       operatorName: body.operatorName,
@@ -89,6 +86,27 @@ export async function action({ request }: Route.ActionArgs) {
     entityId: window.id,
     detail: `Ventana creada para ${client.name}`,
   });
+
+  if (conflict) {
+    const conflictWindow = await prisma.window.findUniqueOrThrow({
+      where: { id: conflict.id },
+      include: { client: true },
+    });
+    const reason =
+      `Conflicto automático: se solapa con la ventana de ${conflictWindow.client.name} ` +
+      `(${conflictWindow.scheduledStart.toISOString()} - ${conflictWindow.scheduledEnd.toISOString()}) en ${warehouse.name}.`;
+    await prisma.overrideRequest.create({
+      data: { windowId: window.id, requestedBy: user.id, reason },
+    });
+    await logActivity({
+      userId: user.id,
+      action: "REQUEST_OVERRIDE",
+      entity: "Window",
+      entityId: window.id,
+      detail: reason,
+    });
+    return Response.json({ window: updated, qrPayload, overridden: true }, { status: 201 });
+  }
 
   return Response.json({ window: updated, qrPayload }, { status: 201 });
 }

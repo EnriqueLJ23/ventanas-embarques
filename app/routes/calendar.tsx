@@ -18,9 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import { Alert, AlertTitle, AlertDescription } from "~/components/ui/alert";
 import { Separator } from "~/components/ui/separator";
-import { Textarea } from "~/components/ui/textarea";
 import {
   ShipmentCalendar,
   type CalendarEvent,
@@ -30,7 +28,7 @@ import { WindowQrDialog } from "~/components/qr/WindowQrDialog";
 import { WINDOW_TYPE_LABEL } from "~/lib/windowStatus";
 import { PageHeader } from "~/components/layout/PageHeader";
 import { Card, CardContent } from "~/components/ui/card";
-import { AlertTriangle, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { format, addMinutes } from "date-fns";
 import { toast } from "sonner";
 
@@ -52,6 +50,7 @@ interface ClientOption {
   name: string;
   avgLoadTime: number;
   defaultArrivalTime: string | null;
+  preferredWarehouseId: string | null;
 }
 interface WarehouseOption {
   id: string;
@@ -78,9 +77,6 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
   const [operatorName, setOperatorName] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
   const [type, setType] = useState<"CARGA" | "DESCARGA" | "">("");
-  const [conflict, setConflict] = useState<any>(null);
-  const [overrideOpen, setOverrideOpen] = useState(false);
-  const [overrideReason, setOverrideReason] = useState("");
   const [qrOpen, setQrOpen] = useState(false);
   const [createdWindow, setCreatedWindow] = useState<any>(null);
 
@@ -118,16 +114,10 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
     fetch("/api/warehouses").then((r) => r.json()).then(setWarehouses);
   }, [dialogOpen]);
 
-  function openCreateDialog(prefill?: { warehouseId: string; windowDate: string; time: string }) {
-    setWindowDate(prefill?.windowDate ?? date);
-    setTime(prefill?.time ?? "");
-    if (prefill?.warehouseId) setWarehouseId(prefill.warehouseId);
-    setDialogOpen(true);
-  }
-
   const selectedClient = clients.find((c) => c.id === clientId);
   const start = windowDate && time ? new Date(`${windowDate}T${time}`) : null;
   const end = start && selectedClient ? addMinutes(start, selectedClient.avgLoadTime) : null;
+  const selectedWarehouse = warehouses.find((w) => w.id === warehouseId);
 
   useEffect(() => {
     if (selectedClient?.defaultArrivalTime && !time) {
@@ -136,21 +126,12 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
   }, [selectedClient]);
 
   useEffect(() => {
-    if (!warehouseId || !start || !end) { setConflict(null); return; }
-    const params = new URLSearchParams({
-      warehouseId,
-      start: start.toISOString(),
-      end: end.toISOString(),
-    });
-    fetch(`/api/windows/conflicts?${params}`)
-      .then((r) => r.json())
-      .then((data) => setConflict(data.conflict));
-  }, [warehouseId, start?.getTime(), end?.getTime()]);
+    setWarehouseId(selectedClient?.preferredWarehouseId ?? "");
+  }, [selectedClient]);
 
   function resetForm() {
     setClientId(""); setWarehouseId(""); setWindowDate(date);
-    setTime(""); setOperatorName(""); setLicensePlate("");
-    setConflict(null); setOverrideReason(""); setType("");
+    setTime(""); setOperatorName(""); setLicensePlate(""); setType("");
   }
 
   async function handleSubmit() {
@@ -164,39 +145,18 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
         operatorName, licensePlate, type,
       }),
     });
-    if (res.status === 409) {
-      const data = await res.json();
-      setConflict(data.conflict);
-      toast.error("Existe un conflicto de horario en esta nave");
-      return;
-    }
     if (!res.ok) { toast.error("No se pudo crear la ventana"); return; }
     const data = await res.json();
     setCreatedWindow(data.window);
     setDialogOpen(false);
     setQrOpen(true);
-    toast.success("Ventana creada");
+    if (data.overridden) {
+      toast.warning("Ventana creada con conflicto de horario — pendiente de revisión del administrador");
+    } else {
+      toast.success("Ventana creada");
+    }
     resetForm();
     fetchEvents();
-  }
-
-  async function handleOverrideRequest() {
-    if (!clientId || !warehouseId || !start) return;
-    const res = await fetch("/api/overrides", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        clientId, warehouseId,
-        scheduledStart: start.toISOString(),
-        operatorName, licensePlate,
-        reason: overrideReason,
-      }),
-    });
-    if (!res.ok) { toast.error("No se pudo enviar la solicitud"); return; }
-    toast.success("Solicitud de excepción enviada al administrador");
-    setOverrideOpen(false);
-    setDialogOpen(false);
-    resetForm();
   }
 
   const canCreate = role === "VENTAS" || role === "ADMINISTRADOR";
@@ -223,7 +183,7 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
               className="w-40 h-8 text-sm"
             />
             {canCreate && (
-              <Button size="sm" onClick={() => openCreateDialog()}>
+              <Button size="sm" onClick={() => setDialogOpen(true)}>
                 <Plus className="size-4 mr-1" />
                 Nueva ventana
               </Button>
@@ -238,16 +198,6 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
             resources={resources}
             events={events}
             onEventClick={(id) => navigate(`/windows/${id}`)}
-            onSlotClick={
-              canCreate
-                ? (info) =>
-                    openCreateDialog({
-                      warehouseId: info.warehouseId,
-                      windowDate: info.date,
-                      time: info.time,
-                    })
-                : undefined
-            }
           />
         </CardContent>
       </Card>
@@ -282,21 +232,27 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
               </p>
             )}
 
-            <div className="space-y-1">
-              <Label>Nave</Label>
-              <Select value={warehouseId} onValueChange={setWarehouseId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona una nave" />
-                </SelectTrigger>
-                <SelectContent>
-                  {warehouses.map((w) => (
-                    <SelectItem key={w.id} value={w.id}>
-                      {w.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {selectedClient?.preferredWarehouseId ? (
+              <p className="text-xs text-muted-foreground">
+                Nave asignada: <span className="font-medium text-foreground">{selectedWarehouse?.name ?? "—"}</span>
+              </p>
+            ) : selectedClient ? (
+              <div className="space-y-1">
+                <Label>Nave</Label>
+                <Select value={warehouseId} onValueChange={setWarehouseId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Este cliente no tiene nave preferida — selecciona una" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses.map((w) => (
+                      <SelectItem key={w.id} value={w.id}>
+                        {w.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
 
             <Separator />
 
@@ -342,55 +298,12 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
               <Input id="plate" value={licensePlate} onChange={(e) => setLicensePlate(e.target.value)} />
             </div>
 
-            {conflict && (
-              <Alert variant="destructive">
-                <AlertTriangle className="size-4" />
-                <AlertTitle>Conflicto de horario</AlertTitle>
-                <AlertDescription>
-                  Ya existe la ventana de {conflict.client.name} (
-                  {format(new Date(conflict.scheduledStart), "HH:mm")}
-                  {" - "}
-                  {format(new Date(conflict.scheduledEnd), "HH:mm")}) en esta nave.
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() => setOverrideOpen(true)}
-                  >
-                    Solicitar excepción al administrador
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            )}
-
             <Button
               className="w-full"
               onClick={handleSubmit}
-              disabled={
-                !clientId || !warehouseId || !start || !operatorName || !licensePlate || !type || !!conflict
-              }
+              disabled={!clientId || !warehouseId || !start || !operatorName || !licensePlate || !type}
             >
               Guardar ventana
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Override reason dialog */}
-      <Dialog open={overrideOpen} onOpenChange={setOverrideOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Solicitar excepción</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <Label htmlFor="overrideReason">Motivo</Label>
-            <Textarea
-              id="overrideReason"
-              value={overrideReason}
-              onChange={(e) => setOverrideReason(e.target.value)}
-            />
-            <Button onClick={handleOverrideRequest} disabled={!overrideReason}>
-              Enviar solicitud
             </Button>
           </div>
         </DialogContent>

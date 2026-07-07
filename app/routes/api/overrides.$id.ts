@@ -7,13 +7,13 @@ export async function action({ request, params }: Route.ActionArgs) {
   const user = await requireUser(request, ["ADMINISTRADOR"]);
   const body = await request.json();
 
+  const existing = await prisma.overrideRequest.findUniqueOrThrow({
+    where: { id: params.id },
+  });
+
   let overrideRequest;
 
   if (body.status === "REJECTED") {
-    const existing = await prisma.overrideRequest.findUniqueOrThrow({
-      where: { id: params.id },
-    });
-
     const [updatedOverrideRequest] = await prisma.$transaction([
       prisma.overrideRequest.update({
         where: { id: params.id },
@@ -25,6 +25,18 @@ export async function action({ request, params }: Route.ActionArgs) {
       }),
     ]);
 
+    overrideRequest = updatedOverrideRequest;
+  } else if (body.warehouseId) {
+    const [updatedOverrideRequest] = await prisma.$transaction([
+      prisma.overrideRequest.update({
+        where: { id: params.id },
+        data: { status: body.status, reviewedBy: user.id, reviewedAt: new Date() },
+      }),
+      prisma.window.update({
+        where: { id: existing.windowId },
+        data: { warehouseId: body.warehouseId },
+      }),
+    ]);
     overrideRequest = updatedOverrideRequest;
   } else {
     overrideRequest = await prisma.overrideRequest.update({

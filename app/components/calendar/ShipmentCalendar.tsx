@@ -24,22 +24,14 @@ export interface CalendarEvent {
   status: string;
 }
 
-export interface SlotClickInfo {
-  date: string;
-  time: string;
-  warehouseId: string;
-}
-
 export function ShipmentCalendar({
   resources,
   events,
   onEventClick,
-  onSlotClick,
 }: {
   resources: CalendarResource[];
   events: CalendarEvent[];
   onEventClick: (id: string) => void;
-  onSlotClick?: (info: SlotClickInfo) => void;
 }) {
   return (
     <div className="h-full min-h-[420px]">
@@ -58,15 +50,6 @@ export function ShipmentCalendar({
           color: STATUS_COLORS[e.status] ?? STATUS_COLORS.SCHEDULED,
         }))}
         eventClick={(info) => onEventClick(info.event.id)}
-        dateClick={(info) => {
-          if (!onSlotClick || !info.resource) return;
-          const pad = (n: number) => String(n).padStart(2, "0");
-          onSlotClick({
-            date: `${info.date.getFullYear()}-${pad(info.date.getMonth() + 1)}-${pad(info.date.getDate())}`,
-            time: `${pad(info.date.getHours())}:${pad(info.date.getMinutes())}`,
-            warehouseId: info.resource.id,
-          });
-        }}
         height="100%"
         expandRows={true}
         slotMinTime="07:00:00"
