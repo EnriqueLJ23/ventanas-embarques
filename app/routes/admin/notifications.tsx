@@ -4,7 +4,6 @@ import type { Route } from "./+types/notifications";
 import { requireUser } from "~/lib/session.server";
 import { prisma } from "~/lib/db.server";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
   Select,
@@ -34,29 +33,37 @@ import { NOTIFICATION_EVENTS, NOTIFICATION_EVENT_LABEL } from "~/lib/notificatio
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
-  const recipients = await prisma.notificationRecipient.findMany({
-    orderBy: [{ event: "asc" }, { email: "asc" }],
-  });
-  return { recipients };
+  const [recipients, users] = await Promise.all([
+    prisma.notificationRecipient.findMany({
+      orderBy: [{ event: "asc" }, { user: { name: "asc" } }],
+      include: { user: { select: { id: true, name: true, email: true, active: true } } },
+    }),
+    prisma.user.findMany({
+      where: { active: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, email: true },
+    }),
+  ]);
+  return { recipients, users };
 }
 
 export default function NotificationsAdmin({ loaderData }: Route.ComponentProps) {
-  const { recipients } = loaderData;
+  const { recipients, users } = loaderData;
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
   const [event, setEvent] = useState<string>(NOTIFICATION_EVENTS[0]);
-  const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
 
   async function handleCreate() {
     const res = await fetch("/api/notification-recipients", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event, email }),
+      body: JSON.stringify({ event, userId }),
     });
     if (!res.ok) { toast.error("No se pudo agregar el destinatario"); return; }
     toast.success("Destinatario agregado");
     setCreateOpen(false);
-    setEmail("");
+    setUserId("");
     navigate(".", { replace: true });
   }
 
@@ -93,7 +100,7 @@ export default function NotificationsAdmin({ loaderData }: Route.ComponentProps)
             open={createOpen}
             onOpenChange={setCreateOpen}
             onSave={handleCreate}
-            saveDisabled={!email}
+            saveDisabled={!userId}
           >
             <div className="space-y-1">
               <Label>Evento</Label>
@@ -109,8 +116,17 @@ export default function NotificationsAdmin({ loaderData }: Route.ComponentProps)
               </Select>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="email">Correo</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Label>Usuario</Label>
+              <Select value={userId} onValueChange={setUserId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un usuario" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={String(u.id)}>{u.name} — {u.email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CrudFormDialog>
         }
@@ -137,7 +153,7 @@ export default function NotificationsAdmin({ loaderData }: Route.ComponentProps)
               {recipients.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="pl-4 font-medium">{NOTIFICATION_EVENT_LABEL[r.event]}</TableCell>
-                  <TableCell className="text-muted-foreground">{r.email}</TableCell>
+                  <TableCell className="text-muted-foreground">{r.user.name} — {r.user.email}</TableCell>
                   <TableCell>
                     <Badge variant={r.active ? "success" : "secondary"}>
                       {r.active ? "Activo" : "Inactivo"}
