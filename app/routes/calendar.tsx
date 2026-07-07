@@ -117,9 +117,14 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
     if (!dialogOpen) return;
     fetch("/api/clients").then((r) => r.json()).then(setClients);
     fetch("/api/warehouses").then((r) => r.json()).then(setWarehouses);
-    // Pre-fill with selected calendar date
-    setWindowDate(date);
   }, [dialogOpen]);
+
+  function openCreateDialog(prefill?: { warehouseId: string; windowDate: string; time: string }) {
+    setWindowDate(prefill?.windowDate ?? date);
+    setTime(prefill?.time ?? "");
+    if (prefill?.warehouseId) setWarehouseId(prefill.warehouseId);
+    setDialogOpen(true);
+  }
 
   const selectedClient = clients.find((c) => c.id === clientId);
   const start = windowDate && time ? new Date(`${windowDate}T${time}`) : null;
@@ -219,7 +224,7 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
               className="w-40 h-8 text-sm"
             />
             {canCreate && (
-              <Button size="sm" onClick={() => setDialogOpen(true)}>
+              <Button size="sm" onClick={() => openCreateDialog()}>
                 <Plus className="size-4 mr-1" />
                 Nueva ventana
               </Button>
@@ -234,6 +239,16 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
             resources={resources}
             events={events}
             onEventClick={(id) => navigate(`/windows/${id}`)}
+            onSlotClick={
+              canCreate
+                ? (info) =>
+                    openCreateDialog({
+                      warehouseId: info.warehouseId,
+                      windowDate: info.date,
+                      time: info.time,
+                    })
+                : undefined
+            }
           />
         </CardContent>
       </Card>
