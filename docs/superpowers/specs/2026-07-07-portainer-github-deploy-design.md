@@ -31,8 +31,16 @@ inyectados por Portainer.
 - `postgres`: password fijo `"1234"` → `${POSTGRES_PASSWORD}`.
 - `DATABASE_URL` del `app` construida contra el servicio interno `postgres` (nombre DNS del
   compose network), usando `${POSTGRES_PASSWORD}`.
-- Quitar el mapeo público `5432:5432` de `postgres` — la base de datos solo debe ser alcanzable
-  dentro de la red interna del stack, no expuesta al host/internet (confirmado con el usuario).
+- El mapeo `5432:5432` de `postgres` **se mantiene en el repo** — `DATABASE_URL` usa el hostname
+  `postgres`, que solo resuelve dentro de la red de Docker; el flujo local de `npm run dev`
+  (proceso en el host, fuera de Docker) depende de ese puerto publicado para alcanzar la base de
+  datos. Un único `docker-compose.yml` sirve para dev y para el stack de Portainer.
+- En Portainer, **después de que el stack se cree desde el repo**, editar el compose directamente
+  en el editor de Portainer para borrar la línea `ports: ["5432:5432"]` del servicio `postgres`
+  antes de desplegar — la base de datos de producción no debe quedar expuesta al host/internet.
+  Este ajuste vive solo en Portainer (no en git): como no hay webhook de auto-redeploy
+  configurado (ver "Fuera de alcance"), un futuro `git pull` manual del stack no lo revierte
+  sin que el usuario lo note.
 - `app` mantiene `3025:3000` publicado al host, como el usuario ya viene operando con NPM (en
   vez de unir contenedores a la red Docker de NPM — decisión explícita del usuario por
   practicidad; NPM seguirá apuntando a `IP-DEL-HOST:3025`).
@@ -55,7 +63,9 @@ Agregar:
    `master`, path `docker-compose.yml`. Cargar las variables de entorno (de `.env.example`) en
    el editor de Portainer, con valores de producción — `SESSION_SECRET` nuevo y fuerte (no
    reusar el de desarrollo), `POSTGRES_PASSWORD` fuerte,
-   `MICROSOFT_REDIRECT_URI=https://windows.tq1.com.mx/auth/callback`.
+   `MICROSOFT_REDIRECT_URI=https://windows.tq1.com.mx/auth/callback`. Antes de desplegar, borrar
+   en el editor de Portainer la línea `ports: ["5432:5432"]` del servicio `postgres` (ver sección
+   docker-compose.yml arriba).
 2. **Nginx Proxy Manager**: nuevo Proxy Host, dominio `windows.tq1.com.mx`, forward a
    `IP-DEL-HOST:3025`, SSL con Let's Encrypt, Force SSL habilitado.
 3. **Azure AD / Entra ID**: agregar `https://windows.tq1.com.mx/auth/callback` como Redirect URI
