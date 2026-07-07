@@ -12,11 +12,9 @@ import {
 function buildDimensionalWhere(url: URL) {
   const warehouseId = url.searchParams.get("warehouseId");
   const clientId = url.searchParams.get("clientId");
-  const tierId = url.searchParams.get("tierId");
   return {
     ...(warehouseId ? { warehouseId } : {}),
     ...(clientId ? { clientId } : {}),
-    ...(tierId ? { client: { tierId } } : {}),
   };
 }
 

@@ -3,7 +3,6 @@ const STATIC_LABELS: [prefix: string, label: string][] = [
   ["/reports", "Reportes"],
   ["/admin/warehouses", "Naves"],
   ["/admin/clients", "Clientes"],
-  ["/admin/tiers", "Tiers"],
   ["/admin/users", "Usuarios"],
   ["/admin/overrides", "Excepciones"],
   ["/admin/activity", "Actividad"],

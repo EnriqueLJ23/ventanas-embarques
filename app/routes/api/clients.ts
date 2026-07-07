@@ -6,7 +6,6 @@ export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request);
   const clients = await prisma.client.findMany({
     where: { active: true },
-    include: { tier: true },
     orderBy: { name: "asc" },
   });
   return Response.json(clients);
@@ -21,7 +20,6 @@ export async function action({ request }: Route.ActionArgs) {
       where: { id: body.id },
       data: {
         name: body.name,
-        tierId: body.tierId,
         avgLoadTime: Number(body.avgLoadTime),
         preferredWarehouseId: body.preferredWarehouseId ?? null,
         defaultArrivalTime: body.defaultArrivalTime ?? null,
@@ -34,7 +32,6 @@ export async function action({ request }: Route.ActionArgs) {
   const client = await prisma.client.create({
     data: {
       name: body.name,
-      tierId: body.tierId,
       avgLoadTime: Number(body.avgLoadTime),
       preferredWarehouseId: body.preferredWarehouseId ?? null,
       defaultArrivalTime: body.defaultArrivalTime ?? null,

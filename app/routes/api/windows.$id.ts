@@ -7,7 +7,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   await requireUser(request);
   const window = await prisma.window.findUniqueOrThrow({
     where: { id: params.id },
-    include: { client: { include: { tier: true } }, warehouse: true, overrideRequest: true },
+    include: { client: true, warehouse: true, overrideRequest: true },
   });
   return Response.json(window);
 }

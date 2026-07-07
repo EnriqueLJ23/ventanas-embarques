@@ -52,7 +52,6 @@ interface ClientOption {
   name: string;
   avgLoadTime: number;
   defaultArrivalTime: string | null;
-  tier: { name: string; priority: number };
 }
 interface WarehouseOption {
   id: string;
@@ -270,7 +269,7 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
                 <SelectContent>
                   {clients.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.name} ({c.tier.name})
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

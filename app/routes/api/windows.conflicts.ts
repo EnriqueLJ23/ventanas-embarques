@@ -32,7 +32,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const conflictWindow = await prisma.window.findUnique({
     where: { id: conflict.id },
-    include: { client: { include: { tier: true } } },
+    include: { client: true },
   });
   return Response.json({ conflict: conflictWindow });
 }

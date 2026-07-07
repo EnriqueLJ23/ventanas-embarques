@@ -35,7 +35,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     prisma.window.findUniqueOrThrow({
       where: { id: params.id },
       include: {
-        client: { include: { tier: true } },
+        client: true,
         warehouse: true,
         overrideRequest: true,
         delayReasonCategory: true,
@@ -113,7 +113,7 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
     <div className="max-w-2xl space-y-4">
       <PageHeader
         title={window.client.name}
-        description={`Tier ${window.client.tier.name}`}
+        description={window.warehouse.name}
         action={
           <div className="flex gap-2">
             {window.status === "SCHEDULED" && (

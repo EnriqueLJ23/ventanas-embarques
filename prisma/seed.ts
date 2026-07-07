@@ -17,24 +17,6 @@ async function main() {
     )
   );
 
-  const tiers = await Promise.all([
-    prisma.tier.upsert({
-      where: { name: "Tier 1" },
-      update: {},
-      create: { name: "Tier 1", priority: 1, description: "Clientes prioritarios" },
-    }),
-    prisma.tier.upsert({
-      where: { name: "Tier 2" },
-      update: {},
-      create: { name: "Tier 2", priority: 2, description: "Clientes regulares" },
-    }),
-    prisma.tier.upsert({
-      where: { name: "Tier 3" },
-      update: {},
-      create: { name: "Tier 3", priority: 3, description: "Clientes ocasionales" },
-    }),
-  ]);
-
   await Promise.all(
     DEFAULT_DELAY_REASONS.map((label) =>
       prisma.delayReason.upsert({
@@ -46,11 +28,11 @@ async function main() {
   );
 
   const clientSeeds = [
-    { name: "Acero del Norte", tier: tiers[0], avgLoadTime: 60, preferredWarehouseId: warehouses[0].id, defaultArrivalTime: "08:00" },
-    { name: "Textiles Monterrey", tier: tiers[0], avgLoadTime: 45, preferredWarehouseId: warehouses[1].id, defaultArrivalTime: "09:00" },
-    { name: "Distribuidora Sureste", tier: tiers[1], avgLoadTime: 90, preferredWarehouseId: warehouses[2].id, defaultArrivalTime: "10:00" },
-    { name: "Logística Bajío", tier: tiers[1], avgLoadTime: 30, preferredWarehouseId: warehouses[3].id, defaultArrivalTime: "11:00" },
-    { name: "Comercial Pacífico", tier: tiers[2], avgLoadTime: 75, preferredWarehouseId: warehouses[0].id, defaultArrivalTime: "13:00" },
+    { name: "Acero del Norte", avgLoadTime: 60, preferredWarehouseId: warehouses[0].id, defaultArrivalTime: "08:00" },
+    { name: "Textiles Monterrey", avgLoadTime: 45, preferredWarehouseId: warehouses[1].id, defaultArrivalTime: "09:00" },
+    { name: "Distribuidora Sureste", avgLoadTime: 90, preferredWarehouseId: warehouses[2].id, defaultArrivalTime: "10:00" },
+    { name: "Logística Bajío", avgLoadTime: 30, preferredWarehouseId: warehouses[3].id, defaultArrivalTime: "11:00" },
+    { name: "Comercial Pacífico", avgLoadTime: 75, preferredWarehouseId: warehouses[0].id, defaultArrivalTime: "13:00" },
   ];
 
   for (const c of clientSeeds) {
@@ -59,7 +41,6 @@ async function main() {
       update: {},
       create: {
         name: c.name,
-        tierId: c.tier.id,
         avgLoadTime: c.avgLoadTime,
         preferredWarehouseId: c.preferredWarehouseId,
         defaultArrivalTime: c.defaultArrivalTime,

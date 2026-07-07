@@ -19,7 +19,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     : {};
   const windows = await prisma.window.findMany({
     where,
-    include: { client: { include: { tier: true } }, warehouse: true },
+    include: { client: true, warehouse: true },
     orderBy: { scheduledStart: "asc" },
   });
   return Response.json(windows);

@@ -40,7 +40,6 @@ const operationItems: NavItem[] = [
 
 const catalogItems: NavItem[] = [
   { to: "/admin/clients", label: "Clientes", icon: Users },
-  { to: "/admin/tiers", label: "Tiers", icon: LayoutGrid },
   { to: "/admin/warehouses", label: "Naves", icon: Warehouse },
   { to: "/admin/delay-reasons", label: "Motivos de retraso", icon: AlertTriangle },
 ];

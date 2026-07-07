@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/clients";
 import { requireUser } from "~/lib/session.server";
@@ -35,35 +35,31 @@ import { TableCard } from "~/components/layout/TableCard";
 import { Card, CardContent } from "~/components/ui/card";
 import { Users } from "lucide-react";
 import { toast } from "sonner";
-import type { Tier, Client } from "@prisma/client";
+import type { Client } from "@prisma/client";
 
-type ClientWithTier = Client & { tier: Tier; preferredWarehouseRef: { id: string; name: string } | null };
+type ClientWithRefs = Client & { preferredWarehouseRef: { id: string; name: string } | null };
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
-  const [clients, tiers, warehouses] = await Promise.all([
-    prisma.client.findMany({ include: { tier: true, preferredWarehouseRef: true }, orderBy: { name: "asc" } }),
-    prisma.tier.findMany({ orderBy: { priority: "asc" } }),
+  const [clients, warehouses] = await Promise.all([
+    prisma.client.findMany({ include: { preferredWarehouseRef: true }, orderBy: { name: "asc" } }),
     prisma.warehouse.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
   ]);
-  return { clients, tiers, warehouses };
+  return { clients, warehouses };
 }
 
 function ClientForm({
-  tiers,
   warehouses,
   initial,
   onSave,
   onCancel,
 }: {
-  tiers: Tier[];
   warehouses: { id: string; name: string }[];
-  initial?: Partial<ClientWithTier>;
+  initial?: Partial<ClientWithRefs>;
   onSave: (data: Record<string, string>) => Promise<void>;
   onCancel: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
-  const [tierId, setTierId] = useState(initial?.tierId ?? "");
   const [avgLoadTime, setAvgLoadTime] = useState(String(initial?.avgLoadTime ?? ""));
   const [preferredWarehouseId, setPreferredWarehouseId] = useState(initial?.preferredWarehouseId ?? "");
   const [defaultArrivalTime, setDefaultArrivalTime] = useState(initial?.defaultArrivalTime ?? "");
@@ -71,7 +67,7 @@ function ClientForm({
 
   async function handleSave() {
     setSaving(true);
-    await onSave({ name, tierId, avgLoadTime, preferredWarehouseId, defaultArrivalTime });
+    await onSave({ name, avgLoadTime, preferredWarehouseId, defaultArrivalTime });
     setSaving(false);
   }
 
@@ -80,21 +76,6 @@ function ClientForm({
       <div className="space-y-1">
         <Label htmlFor="name">Nombre</Label>
         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-      </div>
-      <div className="space-y-1">
-        <Label>Tier</Label>
-        <Select value={tierId} onValueChange={setTierId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecciona un tier" />
-          </SelectTrigger>
-          <SelectContent>
-            {tiers.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                {t.name} — prioridad {t.priority}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
       <div className="space-y-1">
         <Label htmlFor="avgLoadTime">Tiempo promedio (minutos)</Label>
@@ -134,7 +115,7 @@ function ClientForm({
         />
       </div>
       <div className="flex gap-2 pt-1">
-        <Button onClick={handleSave} disabled={!name || !tierId || !avgLoadTime || saving}>
+        <Button onClick={handleSave} disabled={!name || !avgLoadTime || saving}>
           Guardar
         </Button>
         <Button variant="ghost" onClick={onCancel}>
@@ -146,10 +127,10 @@ function ClientForm({
 }
 
 export default function ClientsAdmin({ loaderData }: Route.ComponentProps) {
-  const { clients, tiers, warehouses } = loaderData;
+  const { clients, warehouses } = loaderData;
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<ClientWithTier | null>(null);
+  const [editTarget, setEditTarget] = useState<ClientWithRefs | null>(null);
 
   async function handleCreate(data: Record<string, string>) {
     const res = await fetch("/api/clients", {
@@ -176,7 +157,7 @@ export default function ClientsAdmin({ loaderData }: Route.ComponentProps) {
     navigate(".", { replace: true });
   }
 
-  async function toggleActive(client: ClientWithTier) {
+  async function toggleActive(client: ClientWithRefs) {
     const res = await fetch("/api/clients", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -190,7 +171,7 @@ export default function ClientsAdmin({ loaderData }: Route.ComponentProps) {
     <div className="space-y-4">
       <PageHeader
         title="Clientes"
-        description="Clientes con tiempos de embarque y tier de prioridad configurados."
+        description="Clientes con tiempos de embarque configurados."
         action={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
@@ -201,7 +182,6 @@ export default function ClientsAdmin({ loaderData }: Route.ComponentProps) {
                 <DialogTitle>Nuevo cliente</DialogTitle>
               </DialogHeader>
               <ClientForm
-                tiers={tiers}
                 warehouses={warehouses}
                 onSave={handleCreate}
                 onCancel={() => setCreateOpen(false)}
@@ -219,7 +199,6 @@ export default function ClientsAdmin({ loaderData }: Route.ComponentProps) {
           </DialogHeader>
           {editTarget && (
             <ClientForm
-              tiers={tiers}
               warehouses={warehouses}
               initial={editTarget}
               onSave={handleEdit}
@@ -241,7 +220,6 @@ export default function ClientsAdmin({ loaderData }: Route.ComponentProps) {
             <TableHeader>
               <TableRow>
                 <TableHead className="pl-4">Nombre</TableHead>
-                <TableHead>Tier</TableHead>
                 <TableHead>T. promedio</TableHead>
                 <TableHead>Nave pref.</TableHead>
                 <TableHead>Llegada habitual</TableHead>
@@ -253,9 +231,6 @@ export default function ClientsAdmin({ loaderData }: Route.ComponentProps) {
               {clients.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="pl-4 font-medium">{c.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{c.tier.name}</Badge>
-                  </TableCell>
                   <TableCell>{c.avgLoadTime} min</TableCell>
                   <TableCell className="text-muted-foreground">
                     {c.preferredWarehouseRef?.name ?? "—"}
@@ -270,13 +245,13 @@ export default function ClientsAdmin({ loaderData }: Route.ComponentProps) {
                   </TableCell>
                   <TableCell className="pr-4">
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setEditTarget(c as ClientWithTier)}>
+                      <Button variant="outline" size="sm" onClick={() => setEditTarget(c as ClientWithRefs)}>
                         Editar
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => toggleActive(c as ClientWithTier)}
+                        onClick={() => toggleActive(c as ClientWithRefs)}
                       >
                         {c.active ? "Desactivar" : "Activar"}
                       </Button>

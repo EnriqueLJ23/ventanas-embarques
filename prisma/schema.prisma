@@ -25,20 +25,9 @@ model User {
   notificationRecipients NotificationRecipient[]
 }
 
-model Tier {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  priority    Int      @unique
-  description String?
-  clients     Client[]
-  createdAt   DateTime @default(now())
-}
-
 model Client {
   id                    String     @id @default(cuid())
   name                  String     @unique
-  tierId                String
-  tier                  Tier       @relation(fields: [tierId], references: [id])
   avgLoadTime           Int
   preferredWarehouseId  String?
   preferredWarehouseRef Warehouse? @relation(fields: [preferredWarehouseId], references: [id])
