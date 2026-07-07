@@ -17,7 +17,6 @@ function makeWindow(overrides: Partial<WindowForIndicators> = {}): WindowForIndi
     status: "SCHEDULED",
     scheduledStart: BASE_START,
     actualArrival: null,
-    actualStart: null,
     actualEnd: null,
     delayReasonCategory: null,
     ...overrides,
@@ -70,32 +69,17 @@ describe("computePuntualidad", () => {
 });
 
 describe("computeTiempo", () => {
-  it("averages wait time for windows with both arrival and start", () => {
-    const w = makeWindow({
-      actualArrival: BASE_START,
-      actualStart: minutesAfter(BASE_START, 20),
-    });
-    const result = computeTiempo([w]);
-    expect(result.tiempoPromedioEspera).toBe(20);
-  });
-
-  it("excludes windows missing actualStart from the wait-time average", () => {
-    const w = makeWindow({ actualArrival: BASE_START });
-    const result = computeTiempo([w]);
-    expect(result.tiempoPromedioEspera).toBeNull();
-  });
-
-  it("averages load/unload time only for COMPLETED windows, split by type", () => {
+  it("averages load/unload time (arrival to completion) only for COMPLETED windows, split by type", () => {
     const carga = makeWindow({
       type: "CARGA",
       status: "COMPLETED",
-      actualStart: BASE_START,
+      actualArrival: BASE_START,
       actualEnd: minutesAfter(BASE_START, 45),
     });
     const descarga = makeWindow({
       type: "DESCARGA",
       status: "COMPLETED",
-      actualStart: BASE_START,
+      actualArrival: BASE_START,
       actualEnd: minutesAfter(BASE_START, 10),
     });
     const result = computeTiempo([carga, descarga]);
@@ -108,7 +92,6 @@ describe("computeTiempo", () => {
       type: "CARGA",
       status: "IN_PROGRESS",
       actualArrival: BASE_START,
-      actualStart: BASE_START,
     });
     const result = computeTiempo([inProgress]);
     expect(result.tiempoPromedioCarga).toBeNull();
@@ -119,7 +102,6 @@ describe("computeTiempo", () => {
     const w = makeWindow({
       status: "COMPLETED",
       actualArrival: BASE_START,
-      actualStart: minutesAfter(BASE_START, 10),
       actualEnd: minutesAfter(BASE_START, 70),
     });
     const result = computeTiempo([w]);

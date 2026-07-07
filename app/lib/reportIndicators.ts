@@ -9,7 +9,6 @@ export interface WindowForIndicators {
   status: WindowStatus;
   scheduledStart: Date;
   actualArrival: Date | null;
-  actualStart: Date | null;
   actualEnd: Date | null;
   delayReasonCategory: { id: string; label: string } | null;
 }
@@ -36,24 +35,19 @@ function average(values: number[]): number | null {
 }
 
 export function computeTiempo(windows: WindowForIndicators[]) {
-  const esperaMinutes = windows
-    .filter((w) => w.actualArrival && w.actualStart)
-    .map((w) => (w.actualStart!.getTime() - w.actualArrival!.getTime()) / 60000);
-
   const cargaMinutes = windows
-    .filter((w) => w.type === "CARGA" && w.status === "COMPLETED" && w.actualStart && w.actualEnd)
-    .map((w) => (w.actualEnd!.getTime() - w.actualStart!.getTime()) / 60000);
+    .filter((w) => w.type === "CARGA" && w.status === "COMPLETED" && w.actualArrival && w.actualEnd)
+    .map((w) => (w.actualEnd!.getTime() - w.actualArrival!.getTime()) / 60000);
 
   const descargaMinutes = windows
-    .filter((w) => w.type === "DESCARGA" && w.status === "COMPLETED" && w.actualStart && w.actualEnd)
-    .map((w) => (w.actualEnd!.getTime() - w.actualStart!.getTime()) / 60000);
+    .filter((w) => w.type === "DESCARGA" && w.status === "COMPLETED" && w.actualArrival && w.actualEnd)
+    .map((w) => (w.actualEnd!.getTime() - w.actualArrival!.getTime()) / 60000);
 
   const totalEnPlantaMinutes = windows
     .filter((w) => w.status === "COMPLETED" && w.actualArrival && w.actualEnd)
     .map((w) => (w.actualEnd!.getTime() - w.actualArrival!.getTime()) / 60000);
 
   return {
-    tiempoPromedioEspera: average(esperaMinutes),
     tiempoPromedioCarga: average(cargaMinutes),
     tiempoPromedioDescarga: average(descargaMinutes),
     tiempoPromedioTotalEnPlanta: average(totalEnPlantaMinutes),

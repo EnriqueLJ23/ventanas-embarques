@@ -54,8 +54,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   for (const w of windows) {
     const key = w.client.name;
     const entry = byClient.get(key) ?? { actualSum: 0, actualCount: 0, estimated: w.client.avgLoadTime, delays: 0 };
-    if (w.actualStart && w.actualEnd) {
-      entry.actualSum += (w.actualEnd.getTime() - w.actualStart.getTime()) / 60000;
+    if (w.actualArrival && w.actualEnd) {
+      entry.actualSum += (w.actualEnd.getTime() - w.actualArrival.getTime()) / 60000;
       entry.actualCount += 1;
     }
     if (w.delayReasonCategory) entry.delays += 1;
@@ -73,7 +73,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     status: w.status,
     scheduledStart: w.scheduledStart,
     actualArrival: w.actualArrival,
-    actualStart: w.actualStart,
     actualEnd: w.actualEnd,
     delayReasonCategory: w.delayReasonCategory
       ? { id: w.delayReasonCategory.id, label: w.delayReasonCategory.label }

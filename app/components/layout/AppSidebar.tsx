@@ -60,11 +60,16 @@ const operationAdminItems: NavItem[] = [
 
 const ROLE_LABEL: Record<Role, string> = {
   VENTAS: "Ventas",
-  CARGA: "Carga",
-  DESCARGA: "Descarga",
+  ALMACEN: "Almacén",
   ADMINISTRADOR: "Administrador",
   GUARDIA: "Guardia",
 };
+
+function operationItemsForRole(role: Role): NavItem[] {
+  if (role === "VENTAS") return operationItems.filter((item) => item.to === "/calendar");
+  if (role === "ALMACEN" || role === "GUARDIA") return operationItems.filter((item) => item.to === "/");
+  return operationItems;
+}
 
 function NavLinkItem({ item, pathname }: { item: NavItem; pathname: string }) {
   const isActive =
@@ -102,10 +107,7 @@ export function AppSidebar({ role }: { role: Role }) {
           <SidebarGroupLabel>Operación</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {(role === "GUARDIA"
-                ? operationItems.filter((item) => item.to === "/")
-                : operationItems
-              ).map((item) => (
+              {operationItemsForRole(role).map((item) => (
                 <NavLinkItem key={item.to} item={item} pathname={pathname} />
               ))}
             </SidebarMenu>

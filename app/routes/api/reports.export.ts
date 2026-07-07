@@ -22,8 +22,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   const byClient = new Map<string, { actualSum: number; actualCount: number; estimated: number; delays: number }>();
   for (const w of windows) {
     const entry = byClient.get(w.client.name) ?? { actualSum: 0, actualCount: 0, estimated: w.client.avgLoadTime, delays: 0 };
-    if (w.actualStart && w.actualEnd) {
-      entry.actualSum += (w.actualEnd.getTime() - w.actualStart.getTime()) / 60000;
+    if (w.actualArrival && w.actualEnd) {
+      entry.actualSum += (w.actualEnd.getTime() - w.actualArrival.getTime()) / 60000;
       entry.actualCount += 1;
     }
     if (w.delayReasonCategory) entry.delays += 1;
@@ -36,13 +36,13 @@ export async function loader({ request }: Route.LoaderArgs) {
   const detailSheet = workbook.addWorksheet("Detalle de ventanas");
   detailSheet.addRow([
     "ID", "Cliente", "Nave", "Tipo", "Inicio programado", "Fin programado",
-    "Inicio real", "Fin real", "Operador", "Placas", "Rollos", "Estado", "Motivo de retraso", "Detalle",
+    "Llegada real", "Fin real", "Operador", "Placas", "Rollos", "Estado", "Motivo de retraso", "Detalle",
   ]);
   for (const w of windows) {
     detailSheet.addRow([
       w.id, w.client.name, w.warehouse.name, w.type,
       w.scheduledStart.toISOString(), w.scheduledEnd.toISOString(),
-      w.actualStart?.toISOString() ?? "", w.actualEnd?.toISOString() ?? "",
+      w.actualArrival?.toISOString() ?? "", w.actualEnd?.toISOString() ?? "",
       w.operatorName, w.licensePlate, w.rollsCount ?? "", w.status,
       w.delayReasonCategory?.label ?? "",
       w.delayReason ?? "",

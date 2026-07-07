@@ -41,7 +41,7 @@ const STATUS_LEGEND: { label: string; colorClass: string }[] = [
 ];
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const user = await requireUser(request);
+  const user = await requireUser(request, ["VENTAS", "ADMINISTRADOR"]);
   return { role: user.role };
 }
 

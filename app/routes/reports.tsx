@@ -158,16 +158,7 @@ export default function Reports() {
 
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">Tiempo</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Espera promedio</CardTitle>
-                  <Clock3 className="size-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="text-3xl font-bold">
-                  {summary.tiempo.tiempoPromedioEspera != null ? `${summary.tiempo.tiempoPromedioEspera} min` : "—"}
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Carga promedio</CardTitle>

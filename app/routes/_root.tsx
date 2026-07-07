@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, redirect } from "react-router";
 import type { Route } from "./+types/_root";
 import { requireUser } from "~/lib/session.server";
 import { prisma } from "~/lib/db.server";
@@ -25,6 +25,11 @@ import { es } from "date-fns/locale";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
+
+  if (user.role === "VENTAS") {
+    throw redirect("/calendar");
+  }
+
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date();
@@ -60,12 +65,9 @@ export async function loader({ request }: Route.LoaderArgs) {
     };
   }
 
-  if (user.role === "CARGA" || user.role === "DESCARGA") {
+  if (user.role === "ALMACEN") {
     const windows = await prisma.window.findMany({
-      where: {
-        scheduledStart: { gte: todayStart, lte: todayEnd },
-        type: user.role === "CARGA" ? "CARGA" : "DESCARGA",
-      },
+      where: { scheduledStart: { gte: todayStart, lte: todayEnd } },
       include: { client: true, warehouse: true },
       orderBy: { scheduledStart: "asc" },
     });
@@ -162,7 +164,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  if (loaderData.role === "CARGA" || loaderData.role === "DESCARGA") {
+  if (loaderData.role === "ALMACEN") {
     const { windows } = loaderData;
     return (
       <div className="space-y-6">
@@ -204,19 +206,5 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Bienvenido" description={today} />
-      <div className="max-w-xs">
-        <Link to="/calendar">
-          <Card className="hover:bg-accent transition-colors">
-            <CardContent className="flex items-center gap-3 pt-6">
-              <CalendarRange className="size-5 text-primary" />
-              <span className="font-medium">Ver calendario</span>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
-    </div>
-  );
+  return null;
 }

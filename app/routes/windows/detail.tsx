@@ -56,26 +56,6 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
   const [delayReason, setDelayReason] = useState("");
   const [needsDelayReason, setNeedsDelayReason] = useState(false);
 
-  async function handleArrive() {
-    const res = await fetch(`/api/windows/${window.id}/arrive`, { method: "POST" });
-    if (!res.ok) {
-      toast.error("No se pudo registrar la llegada");
-      return;
-    }
-    toast.success("Llegada registrada");
-    navigate(".", { replace: true });
-  }
-
-  async function handleStart() {
-    const res = await fetch(`/api/windows/${window.id}/start`, { method: "POST" });
-    if (!res.ok) {
-      toast.error("No se pudo iniciar la ventana");
-      return;
-    }
-    toast.success("Ventana iniciada");
-    navigate(".", { replace: true });
-  }
-
   async function handleComplete() {
     const res = await fetch(`/api/windows/${window.id}/complete`, {
       method: "POST",
@@ -116,15 +96,7 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
         description={window.warehouse.name}
         action={
           <div className="flex gap-2">
-            {window.status === "SCHEDULED" && (
-              <Button variant="outline" onClick={handleArrive}>
-                Confirmar llegada
-              </Button>
-            )}
-            {(window.status === "SCHEDULED" || window.status === "ARRIVED") && (
-              <Button onClick={handleStart}>Iniciar</Button>
-            )}
-            {window.status === "IN_PROGRESS" && (
+            {window.status === "ARRIVED" && (
               <Button onClick={() => setCompleteOpen(true)}>Completar</Button>
             )}
             {window.qrCode && (
@@ -153,6 +125,12 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
               label="Horario"
               value={`${format(new Date(window.scheduledStart), "dd/MM/yyyy HH:mm")} - ${format(new Date(window.scheduledEnd), "HH:mm")}`}
             />
+            {window.actualArrival && (
+              <Field label="Hora real de entrada" value={format(new Date(window.actualArrival), "dd/MM/yyyy HH:mm")} />
+            )}
+            {window.actualEnd && (
+              <Field label="Hora real de salida" value={format(new Date(window.actualEnd), "dd/MM/yyyy HH:mm")} />
+            )}
             {window.rollsCount != null && (
               <Field label="Rollos embarcados" value={window.rollsCount} />
             )}

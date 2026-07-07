@@ -32,12 +32,11 @@ import { ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@prisma/client";
 
-const ROLES = ["VENTAS", "CARGA", "DESCARGA", "ADMINISTRADOR", "GUARDIA"] as const;
+const ROLES = ["VENTAS", "ALMACEN", "ADMINISTRADOR", "GUARDIA"] as const;
 
 const ROLE_LABELS: Record<string, string> = {
   VENTAS: "Ventas",
-  CARGA: "Carga",
-  DESCARGA: "Descarga",
+  ALMACEN: "Almacén",
   ADMINISTRADOR: "Administrador",
   GUARDIA: "Guardia",
 };

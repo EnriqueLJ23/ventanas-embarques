@@ -8,8 +8,7 @@ datasource db {
 
 enum Role {
   VENTAS
-  CARGA
-  DESCARGA
+  ALMACEN
   ADMINISTRADOR
   GUARDIA
 }

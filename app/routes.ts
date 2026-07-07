@@ -41,7 +41,6 @@ export default [
   route("api/windows", "./routes/api/windows.ts"),
   route("api/windows/:id", "./routes/api/windows.$id.ts"),
   route("api/windows/:id/arrive", "./routes/api/windows.$id.arrive.ts"),
-  route("api/windows/:id/start", "./routes/api/windows.$id.start.ts"),
   route("api/windows/:id/complete", "./routes/api/windows.$id.complete.ts"),
   route("api/overrides/:id", "./routes/api/overrides.$id.ts"),
   route("api/reports/summary", "./routes/api/reports.summary.ts"),

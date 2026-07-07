@@ -4,16 +4,15 @@ import { prisma } from "~/lib/db.server";
 import { logActivity } from "~/lib/activity.server";
 
 export async function action({ request, params }: Route.ActionArgs) {
-  const user = await requireUser(request, ["CARGA", "DESCARGA", "ADMINISTRADOR"]);
+  const user = await requireUser(request, ["ALMACEN", "ADMINISTRADOR"]);
   const body = await request.json();
 
   const existing = await prisma.window.findUniqueOrThrow({
     where: { id: params.id },
     include: { client: true },
   });
-  const actualStart = existing.actualStart ?? new Date();
   const actualEnd = new Date();
-  const actualMinutes = (actualEnd.getTime() - actualStart.getTime()) / 60000;
+  const actualMinutes = (actualEnd.getTime() - (existing.actualArrival ?? actualEnd).getTime()) / 60000;
 
   if (actualMinutes > existing.client.avgLoadTime && !body.delayReasonId) {
     return Response.json({ error: "delay_reason_required" }, { status: 400 });
