@@ -11,3 +11,6 @@
 # Nested git worktree — has its own .git file, not meant to be tracked as plain files
 .claude/worktrees/
 .claude/settings.local.json
+
+# Local OpenWolf tooling state — not shared via the repo
+.wolf/
