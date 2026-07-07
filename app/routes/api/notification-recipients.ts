@@ -5,7 +5,8 @@ import { prisma } from "~/lib/db.server";
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
   const recipients = await prisma.notificationRecipient.findMany({
-    orderBy: [{ event: "asc" }, { email: "asc" }],
+    orderBy: [{ event: "asc" }, { user: { name: "asc" } }],
+    include: { user: { select: { id: true, name: true, email: true, active: true } } },
   });
   return Response.json(recipients);
 }
@@ -28,7 +29,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   const recipient = await prisma.notificationRecipient.create({
-    data: { event: body.event, email: body.email },
+    data: { event: body.event, userId: Number(body.userId) },
   });
   return Response.json(recipient, { status: 201 });
 }
