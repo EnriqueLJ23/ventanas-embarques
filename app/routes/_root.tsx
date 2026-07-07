@@ -194,6 +194,16 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     );
   }
 
+  if (loaderData.role === "GUARDIA") {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center p-4">
+        <p className="max-w-sm text-center text-muted-foreground">
+          Escanea el código QR de la unidad para registrar su llegada.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader title="Bienvenido" description={today} />
