@@ -48,6 +48,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 interface ClientOption {
   id: string;
   name: string;
+  type: "CARGA" | "DESCARGA";
   avgLoadTime: number;
   defaultArrivalTime: string | null;
   preferredWarehouseId: string | null;
@@ -70,13 +71,13 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
-  const [clientId, setClientId] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [pendingType, setPendingType] = useState<"CARGA" | "DESCARGA" | "">("");
   const [warehouseId, setWarehouseId] = useState("");
   const [windowDate, setWindowDate] = useState("");
   const [time, setTime] = useState("");
   const [operatorName, setOperatorName] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
-  const [type, setType] = useState<"CARGA" | "DESCARGA" | "">("");
   const [qrOpen, setQrOpen] = useState(false);
   const [createdWindow, setCreatedWindow] = useState<any>(null);
 
@@ -114,10 +115,20 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
     fetch("/api/warehouses").then((r) => r.json()).then(setWarehouses);
   }, [dialogOpen]);
 
-  const selectedClient = clients.find((c) => c.id === clientId);
+  const clientGroup = clients.filter((c) => c.name === clientName);
+  const needsTypeChoice = clientGroup.length > 1;
+  const selectedClient = needsTypeChoice
+    ? clientGroup.find((c) => c.type === pendingType)
+    : clientGroup[0];
+  const clientId = selectedClient?.id ?? "";
+  const uniqueClientNames = Array.from(new Set(clients.map((c) => c.name)));
   const start = windowDate && time ? new Date(`${windowDate}T${time}`) : null;
   const end = start && selectedClient ? addMinutes(start, selectedClient.avgLoadTime) : null;
   const selectedWarehouse = warehouses.find((w) => w.id === warehouseId);
+
+  useEffect(() => {
+    setPendingType("");
+  }, [clientName]);
 
   useEffect(() => {
     if (selectedClient?.defaultArrivalTime && !time) {
@@ -130,8 +141,8 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
   }, [selectedClient]);
 
   function resetForm() {
-    setClientId(""); setWarehouseId(""); setWindowDate(date);
-    setTime(""); setOperatorName(""); setLicensePlate(""); setType("");
+    setClientName(""); setPendingType(""); setWarehouseId(""); setWindowDate(date);
+    setTime(""); setOperatorName(""); setLicensePlate("");
   }
 
   async function handleSubmit() {
@@ -142,7 +153,7 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
       body: JSON.stringify({
         clientId, warehouseId,
         scheduledStart: start.toISOString(),
-        operatorName, licensePlate, type,
+        operatorName, licensePlate,
       }),
     });
     if (!res.ok) { toast.error("No se pudo crear la ventana"); return; }
@@ -212,19 +223,43 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
           <div className="space-y-4">
             <div className="space-y-1">
               <Label>Cliente</Label>
-              <Select value={clientId} onValueChange={setClientId}>
+              <Select value={clientName} onValueChange={setClientName}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un cliente" />
                 </SelectTrigger>
                 <SelectContent>
-                  {clients.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
+                  {uniqueClientNames.map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {needsTypeChoice && (
+              <div className="space-y-1">
+                <Label>Tipo de operación</Label>
+                <Select value={pendingType} onValueChange={(v) => setPendingType(v as "CARGA" | "DESCARGA")}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Este cliente tiene Carga y Descarga — selecciona una" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clientGroup.map((c) => (
+                      <SelectItem key={c.id} value={c.type}>
+                        {WINDOW_TYPE_LABEL[c.type]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {selectedClient && !needsTypeChoice && (
+              <p className="text-xs text-muted-foreground">
+                Tipo de operación: <span className="font-medium text-foreground">{WINDOW_TYPE_LABEL[selectedClient.type]}</span>
+              </p>
+            )}
 
             {selectedClient && (
               <p className="text-xs text-muted-foreground">
@@ -255,19 +290,6 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
             ) : null}
 
             <Separator />
-
-            <div className="space-y-1">
-              <Label>Tipo de operación</Label>
-              <Select value={type} onValueChange={(v) => setType(v as "CARGA" | "DESCARGA")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona Carga o Descarga" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CARGA">{WINDOW_TYPE_LABEL.CARGA}</SelectItem>
-                  <SelectItem value="DESCARGA">{WINDOW_TYPE_LABEL.DESCARGA}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             <div className="flex gap-3">
               <div className="space-y-1 flex-1">
@@ -301,7 +323,7 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
             <Button
               className="w-full"
               onClick={handleSubmit}
-              disabled={!clientId || !warehouseId || !start || !operatorName || !licensePlate || !type}
+              disabled={!clientId || !warehouseId || !start || !operatorName || !licensePlate}
             >
               Guardar ventana
             </Button>

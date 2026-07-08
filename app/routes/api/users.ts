@@ -14,7 +14,12 @@ export async function action({ request }: Route.ActionArgs) {
     const body = await request.json();
     const user = await prisma.user.update({
       where: { id: Number(body.id) },
-      data: { role: body.role, active: body.active },
+      data: {
+        name: body.name ?? undefined,
+        email: body.email ?? undefined,
+        role: body.role ?? undefined,
+        active: body.active ?? undefined,
+      },
     });
     return Response.json(user);
   }

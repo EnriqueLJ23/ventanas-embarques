@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import type { Route } from "./+types/checkin";
 import { prisma } from "~/lib/db.server";
 import { Button } from "~/components/ui/button";
@@ -20,7 +19,6 @@ export async function loader({ params }: Route.LoaderArgs) {
 
 export default function Checkin({ loaderData }: Route.ComponentProps) {
   const { window } = loaderData;
-  const navigate = useNavigate();
   const [status, setStatus] = useState(window.status);
   const [loading, setLoading] = useState(false);
 
@@ -72,9 +70,6 @@ export default function Checkin({ loaderData }: Route.ComponentProps) {
               <Badge variant={WINDOW_STATUS_BADGE_VARIANT[status]}>
                 {WINDOW_STATUS_LABEL[status]}
               </Badge>
-              <Button variant="outline" size="sm" onClick={() => navigate(`/windows/${window.id}`)}>
-                Ver detalle
-              </Button>
             </div>
           )}
         </CardContent>

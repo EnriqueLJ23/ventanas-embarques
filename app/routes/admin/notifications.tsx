@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Badge } from "~/components/ui/badge";
+import { Checkbox } from "~/components/ui/checkbox";
 import { PageHeader } from "~/components/layout/PageHeader";
 import { EmptyState } from "~/components/layout/EmptyState";
 import { TableCard } from "~/components/layout/TableCard";
@@ -51,19 +52,47 @@ export default function NotificationsAdmin({ loaderData }: Route.ComponentProps)
   const { recipients, users } = loaderData;
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
-  const [event, setEvent] = useState<string>(NOTIFICATION_EVENTS[0]);
+  const [events, setEvents] = useState<string[]>([]);
   const [userId, setUserId] = useState("");
+
+  function toggleEvent(event: string, checked: boolean) {
+    setEvents((prev) => (checked ? [...prev, event] : prev.filter((e) => e !== event)));
+  }
+
+  const [editTarget, setEditTarget] = useState<NotificationRecipient | null>(null);
+  const [editEvent, setEditEvent] = useState<string>(NOTIFICATION_EVENTS[0]);
+  const [editUserId, setEditUserId] = useState("");
+
+  function openEdit(r: NotificationRecipient) {
+    setEditTarget(r);
+    setEditEvent(r.event);
+    setEditUserId(String(r.userId));
+  }
+
+  async function handleEditSave() {
+    if (!editTarget) return;
+    const res = await fetch("/api/notification-recipients", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: editTarget.id, event: editEvent, userId: editUserId }),
+    });
+    if (!res.ok) { toast.error("No se pudo actualizar el destinatario"); return; }
+    toast.success("Destinatario actualizado");
+    setEditTarget(null);
+    navigate(".", { replace: true });
+  }
 
   async function handleCreate() {
     const res = await fetch("/api/notification-recipients", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event, userId }),
+      body: JSON.stringify({ events, userId }),
     });
     if (!res.ok) { toast.error("No se pudo agregar el destinatario"); return; }
-    toast.success("Destinatario agregado");
+    toast.success(events.length > 1 ? "Destinatario agregado a los eventos seleccionados" : "Destinatario agregado");
     setCreateOpen(false);
     setUserId("");
+    setEvents([]);
     navigate(".", { replace: true });
   }
 
@@ -96,22 +125,24 @@ export default function NotificationsAdmin({ loaderData }: Route.ComponentProps)
             trigger={<Button>Nuevo destinatario</Button>}
             title="Nuevo destinatario"
             open={createOpen}
-            onOpenChange={setCreateOpen}
+            onOpenChange={(o) => { setCreateOpen(o); if (!o) setEvents([]); }}
             onSave={handleCreate}
-            saveDisabled={!userId}
+            saveDisabled={!userId || events.length === 0}
           >
-            <div className="space-y-1">
-              <Label>Evento</Label>
-              <Select value={event} onValueChange={setEvent}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {NOTIFICATION_EVENTS.map((e) => (
-                    <SelectItem key={e} value={e}>{NOTIFICATION_EVENT_LABEL[e]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-2">
+              <Label>Eventos</Label>
+              {NOTIFICATION_EVENTS.map((e) => (
+                <div key={e} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`event-${e}`}
+                    checked={events.includes(e)}
+                    onCheckedChange={(checked) => toggleEvent(e, checked === true)}
+                  />
+                  <Label htmlFor={`event-${e}`} className="font-normal cursor-pointer">
+                    {NOTIFICATION_EVENT_LABEL[e]}
+                  </Label>
+                </div>
+              ))}
             </div>
             <div className="space-y-1">
               <Label>Usuario</Label>
@@ -129,6 +160,41 @@ export default function NotificationsAdmin({ loaderData }: Route.ComponentProps)
           </CrudFormDialog>
         }
       />
+
+      <CrudFormDialog
+        title="Editar destinatario"
+        open={!!editTarget}
+        onOpenChange={(o) => !o && setEditTarget(null)}
+        onSave={handleEditSave}
+        saveDisabled={!editUserId}
+      >
+        <div className="space-y-1">
+          <Label>Evento</Label>
+          <Select value={editEvent} onValueChange={setEditEvent}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {NOTIFICATION_EVENTS.map((e) => (
+                <SelectItem key={e} value={e}>{NOTIFICATION_EVENT_LABEL[e]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label>Usuario</Label>
+          <Select value={editUserId} onValueChange={setEditUserId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecciona un usuario" />
+            </SelectTrigger>
+            <SelectContent>
+              {users.map((u) => (
+                <SelectItem key={u.id} value={String(u.id)}>{u.name} — {u.email}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CrudFormDialog>
 
       {recipients.length === 0 ? (
         <Card>
@@ -159,6 +225,9 @@ export default function NotificationsAdmin({ loaderData }: Route.ComponentProps)
                   </TableCell>
                   <TableCell className="pr-4">
                     <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => openEdit(r)}>
+                        Editar
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => toggleActive(r)}>
                         {r.active ? "Desactivar" : "Activar"}
                       </Button>

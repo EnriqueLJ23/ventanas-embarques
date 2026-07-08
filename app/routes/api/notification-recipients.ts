@@ -1,6 +1,7 @@
 import type { Route } from "./+types/notification-recipients";
 import { requireUser } from "~/lib/session.server";
 import { prisma } from "~/lib/db.server";
+import type { NotificationEvent } from "@prisma/client";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
@@ -18,7 +19,11 @@ export async function action({ request }: Route.ActionArgs) {
   if (request.method === "PATCH") {
     const recipient = await prisma.notificationRecipient.update({
       where: { id: body.id },
-      data: { active: body.active ?? undefined },
+      data: {
+        active: body.active ?? undefined,
+        event: body.event ?? undefined,
+        userId: body.userId ? Number(body.userId) : undefined,
+      },
     });
     return Response.json(recipient);
   }
@@ -28,8 +33,10 @@ export async function action({ request }: Route.ActionArgs) {
     return Response.json({ ok: true });
   }
 
-  const recipient = await prisma.notificationRecipient.create({
-    data: { event: body.event, userId: Number(body.userId) },
+  const events: NotificationEvent[] = body.events ?? [body.event];
+  await prisma.notificationRecipient.createMany({
+    data: events.map((event) => ({ event, userId: Number(body.userId) })),
+    skipDuplicates: true,
   });
-  return Response.json(recipient, { status: 201 });
+  return Response.json({ ok: true }, { status: 201 });
 }

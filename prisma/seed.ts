@@ -37,10 +37,11 @@ async function main() {
 
   for (const c of clientSeeds) {
     await prisma.client.upsert({
-      where: { name: c.name },
+      where: { name_type: { name: c.name, type: "CARGA" } },
       update: {},
       create: {
         name: c.name,
+        type: "CARGA",
         avgLoadTime: c.avgLoadTime,
         preferredWarehouseId: c.preferredWarehouseId,
         defaultArrivalTime: c.defaultArrivalTime,

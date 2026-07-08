@@ -36,6 +36,7 @@ import { Card, CardContent } from "~/components/ui/card";
 import { Users } from "lucide-react";
 import { toast } from "sonner";
 import type { Client } from "@prisma/client";
+import { WINDOW_TYPE_LABEL } from "~/lib/windowStatus";
 
 type ClientWithRefs = Client & { preferredWarehouseRef: { id: string; name: string } | null };
 
@@ -60,6 +61,7 @@ function ClientForm({
   onCancel: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
+  const [type, setType] = useState(initial?.type ?? "CARGA");
   const [avgLoadTime, setAvgLoadTime] = useState(String(initial?.avgLoadTime ?? ""));
   const [preferredWarehouseId, setPreferredWarehouseId] = useState(initial?.preferredWarehouseId ?? "");
   const [defaultArrivalTime, setDefaultArrivalTime] = useState(initial?.defaultArrivalTime ?? "");
@@ -67,7 +69,7 @@ function ClientForm({
 
   async function handleSave() {
     setSaving(true);
-    await onSave({ name, avgLoadTime, preferredWarehouseId, defaultArrivalTime });
+    await onSave({ name, type, avgLoadTime, preferredWarehouseId, defaultArrivalTime });
     setSaving(false);
   }
 
@@ -76,6 +78,18 @@ function ClientForm({
       <div className="space-y-1">
         <Label htmlFor="name">Nombre</Label>
         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+      </div>
+      <div className="space-y-1">
+        <Label>Tipo de operación</Label>
+        <Select value={type} onValueChange={(v) => setType(v as "CARGA" | "DESCARGA")}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="CARGA">{WINDOW_TYPE_LABEL.CARGA}</SelectItem>
+            <SelectItem value="DESCARGA">{WINDOW_TYPE_LABEL.DESCARGA}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div className="space-y-1">
         <Label htmlFor="avgLoadTime">Tiempo promedio (minutos)</Label>
@@ -218,6 +232,7 @@ export default function ClientsAdmin({ loaderData }: Route.ComponentProps) {
             <TableHeader>
               <TableRow>
                 <TableHead className="pl-4">Nombre</TableHead>
+                <TableHead>Tipo</TableHead>
                 <TableHead>T. promedio</TableHead>
                 <TableHead>Nave pref.</TableHead>
                 <TableHead>Llegada habitual</TableHead>
@@ -229,6 +244,9 @@ export default function ClientsAdmin({ loaderData }: Route.ComponentProps) {
               {clients.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="pl-4 font-medium">{c.name}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{WINDOW_TYPE_LABEL[c.type]}</Badge>
+                  </TableCell>
                   <TableCell>{c.avgLoadTime} min</TableCell>
                   <TableCell className="text-muted-foreground">
                     {c.preferredWarehouseRef?.name ?? "—"}

@@ -20,6 +20,7 @@ export async function action({ request }: Route.ActionArgs) {
       where: { id: body.id },
       data: {
         name: body.name,
+        type: body.type ?? undefined,
         avgLoadTime: Number(body.avgLoadTime),
         preferredWarehouseId: body.preferredWarehouseId ?? null,
         defaultArrivalTime: body.defaultArrivalTime ?? null,
@@ -32,6 +33,7 @@ export async function action({ request }: Route.ActionArgs) {
   const client = await prisma.client.create({
     data: {
       name: body.name,
+      type: body.type ?? "CARGA",
       avgLoadTime: Number(body.avgLoadTime),
       preferredWarehouseId: body.preferredWarehouseId ?? null,
       defaultArrivalTime: body.defaultArrivalTime ?? null,

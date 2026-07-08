@@ -26,7 +26,8 @@ model User {
 
 model Client {
   id                    String     @id @default(cuid())
-  name                  String     @unique
+  name                  String
+  type                  WindowType @default(CARGA)
   avgLoadTime           Int
   preferredWarehouseId  String?
   preferredWarehouseRef Warehouse? @relation(fields: [preferredWarehouseId], references: [id])
@@ -35,6 +36,8 @@ model Client {
   windows               Window[]
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
+
+  @@unique([name, type])
 }
 
 model Warehouse {

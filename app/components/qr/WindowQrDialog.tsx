@@ -19,11 +19,11 @@ export function WindowQrDialog({
   onOpenChange: (open: boolean) => void;
   window: QrWindowData;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const qrRef = useRef<HTMLDivElement>(null);
 
   async function handleDownload() {
-    if (!containerRef.current) return;
-    const dataUrl = await toPng(containerRef.current);
+    if (!qrRef.current) return;
+    const dataUrl = await toPng(qrRef.current);
     const link = document.createElement("a");
     link.download = `ventana-${windowData.id}.png`;
     link.href = dataUrl;
@@ -36,11 +36,13 @@ export function WindowQrDialog({
         <DialogHeader>
           <DialogTitle>Código QR de la ventana</DialogTitle>
         </DialogHeader>
-        <div ref={containerRef} className="flex flex-col items-center gap-3 bg-white p-4">
-          <QRCodeCanvas
-            value={buildCheckinUrl(typeof window === "undefined" ? "" : window.location.origin, windowData.id)}
-            size={220}
-          />
+        <div className="flex flex-col items-center gap-3 bg-white p-4">
+          <div ref={qrRef} className="bg-white p-2">
+            <QRCodeCanvas
+              value={buildCheckinUrl(typeof window === "undefined" ? "" : window.location.origin, windowData.id)}
+              size={220}
+            />
+          </div>
           <p className="text-sm text-center whitespace-pre-line text-black">
             {buildQrPayload(windowData)}
           </p>

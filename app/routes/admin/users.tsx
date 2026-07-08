@@ -60,10 +60,14 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
   const [manualEntry, setManualEntry] = useState(false);
 
   // Edit form state
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState<string>("VENTAS");
 
   function openEdit(u: User) {
     setEditTarget(u);
+    setEditName(u.name);
+    setEditEmail(u.email);
     setEditRole(u.role);
   }
 
@@ -92,10 +96,10 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
     const res = await fetch("/api/users", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: editTarget.id, role: editRole }),
+      body: JSON.stringify({ id: editTarget.id, name: editName, email: editEmail, role: editRole }),
     });
     if (!res.ok) { toast.error("No se pudo actualizar el usuario"); return; }
-    toast.success("Rol actualizado");
+    toast.success("Usuario actualizado");
     setEditTarget(null);
     navigate(".", { replace: true });
   }
@@ -183,10 +187,16 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
         open={!!editTarget}
         onOpenChange={(o) => !o && setEditTarget(null)}
         onSave={handleEditSave}
+        saveDisabled={!editName || !editEmail}
       >
-        <p className="text-sm text-muted-foreground">
-          {editTarget?.name} — {editTarget?.email}
-        </p>
+        <div className="space-y-1">
+          <Label htmlFor="editUname">Nombre</Label>
+          <Input id="editUname" value={editName} onChange={(e) => setEditName(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="editUemail">Correo</Label>
+          <Input id="editUemail" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+        </div>
         <div className="space-y-1">
           <Label>Rol</Label>
           <Select value={editRole} onValueChange={setEditRole}>

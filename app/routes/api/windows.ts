@@ -43,10 +43,6 @@ export async function action({ request }: Route.ActionArgs) {
     return Response.json({ error: "warehouse_not_found" }, { status: 400 });
   }
 
-  if (body.type !== "CARGA" && body.type !== "DESCARGA") {
-    return Response.json({ error: "type_required" }, { status: 400 });
-  }
-
   const scheduledStart = new Date(body.scheduledStart);
   const scheduledEnd = new Date(scheduledStart.getTime() + client.avgLoadTime * 60000);
 
@@ -66,7 +62,7 @@ export async function action({ request }: Route.ActionArgs) {
       scheduledEnd,
       operatorName: body.operatorName,
       licensePlate: body.licensePlate,
-      type: body.type,
+      type: client.type,
       createdBy: user.id,
     },
     include: { client: true, warehouse: true },
