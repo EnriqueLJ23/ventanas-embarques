@@ -82,8 +82,6 @@ export default function DelayReasonsAdmin({ loaderData }: Route.ComponentProps) 
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Motivos de retraso"
-        description="Catálogo de causas usado al completar una ventana con retraso."
         action={
           <CrudFormDialog
             trigger={<Button>Nuevo motivo</Button>}

@@ -76,8 +76,6 @@ export default function ActivityAdmin({ loaderData }: Route.ComponentProps) {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Historial de actividad"
-        description={`Página ${page} de ${totalPages}.`}
         action={
           <Form method="get" className="flex gap-2">
             <Input

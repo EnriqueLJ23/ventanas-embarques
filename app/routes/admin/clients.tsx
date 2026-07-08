@@ -170,8 +170,6 @@ export default function ClientsAdmin({ loaderData }: Route.ComponentProps) {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Clientes"
-        description="Clientes con tiempos de embarque configurados."
         action={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>

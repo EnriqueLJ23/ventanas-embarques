@@ -48,8 +48,6 @@ export default function Reports() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Reportes"
-        description="Tiempos reales vs. estimados por cliente en el rango seleccionado."
         action={
           <Button asChild>
             <a href={`/api/reports/export?from=${from}&to=${to}`}>

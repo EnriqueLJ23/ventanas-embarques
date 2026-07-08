@@ -21,7 +21,6 @@ import {
 } from "~/components/ui/chart";
 import { WINDOW_STATUS_BADGE_VARIANT, WINDOW_STATUS_LABEL } from "~/lib/windowStatus";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -82,14 +81,10 @@ const occupancyChartConfig = {
 } satisfies ChartConfig;
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const today = format(new Date(), "EEEE d 'de' MMMM", { locale: es });
-
   if (loaderData.role === "ADMINISTRADOR") {
     const { metrics, occupancy, pendingOverrides } = loaderData;
     return (
       <div className="space-y-6">
-        <PageHeader title="Panel de administración" description={today} />
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -168,7 +163,6 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     const { windows } = loaderData;
     return (
       <div className="space-y-6">
-        <PageHeader title="Ventanas de hoy" description={today} />
         <div className="space-y-2">
           {windows.length === 0 && (
             <p className="text-sm text-muted-foreground">Sin ventanas programadas hoy.</p>

@@ -91,8 +91,6 @@ export default function NotificationsAdmin({ loaderData }: Route.ComponentProps)
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Destinatarios de notificación"
-        description="Correos que reciben cada aviso automático (llegada, retrasos)."
         action={
           <CrudFormDialog
             trigger={<Button>Nuevo destinatario</Button>}

@@ -86,8 +86,6 @@ export default function WarehousesAdmin({ loaderData }: Route.ComponentProps) {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Naves"
-        description="Almacenes disponibles para programar ventanas de embarque."
         action={
           <CrudFormDialog
             trigger={<Button>Nueva nave</Button>}

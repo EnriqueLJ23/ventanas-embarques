@@ -113,8 +113,6 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Usuarios"
-        description="Cuentas con acceso al sistema y su rol asignado. Solo el administrador puede crear cuentas."
         action={
           <CrudFormDialog
             trigger={<Button>Nuevo usuario</Button>}

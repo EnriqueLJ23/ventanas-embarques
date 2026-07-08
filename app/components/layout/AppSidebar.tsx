@@ -11,7 +11,6 @@ import {
   Users,
   Warehouse,
 } from "lucide-react";
-import type { Role } from "@prisma/client";
 import {
   Sidebar,
   SidebarContent,
@@ -58,19 +57,6 @@ const operationAdminItems: NavItem[] = [
   { to: "/reports", label: "Reportes", icon: LayoutGrid },
 ];
 
-const ROLE_LABEL: Record<Role, string> = {
-  VENTAS: "Ventas",
-  ALMACEN: "Almacén",
-  ADMINISTRADOR: "Administrador",
-  GUARDIA: "Guardia",
-};
-
-function operationItemsForRole(role: Role): NavItem[] {
-  if (role === "VENTAS") return operationItems.filter((item) => item.to === "/calendar");
-  if (role === "ALMACEN" || role === "GUARDIA") return operationItems.filter((item) => item.to === "/");
-  return operationItems;
-}
-
 function NavLinkItem({ item, pathname }: { item: NavItem; pathname: string }) {
   const isActive =
     item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
@@ -86,7 +72,9 @@ function NavLinkItem({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-export function AppSidebar({ role }: { role: Role }) {
+// Only ADMINISTRADOR renders this sidebar — other roles only ever touch one
+// screen (plus a detail drill-in) and get a bare header instead (see dashboard.tsx).
+export function AppSidebar() {
   const { pathname } = useLocation();
 
   return (
@@ -107,61 +95,57 @@ export function AppSidebar({ role }: { role: Role }) {
           <SidebarGroupLabel>Operación</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {operationItemsForRole(role).map((item) => (
+              {operationItems.map((item) => (
                 <NavLinkItem key={item.to} item={item} pathname={pathname} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        {role === "ADMINISTRADOR" && (
-          <>
-            <SidebarSeparator />
-            <SidebarGroup>
-              <SidebarGroupLabel>Catálogos</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {catalogItems.map((item) => (
-                    <NavLinkItem key={item.to} item={item} pathname={pathname} />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            <SidebarGroup>
-              <SidebarGroupLabel>Notificaciones</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {notificationItems.map((item) => (
-                    <NavLinkItem key={item.to} item={item} pathname={pathname} />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            <SidebarGroup>
-              <SidebarGroupLabel>Usuarios y accesos</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {userItems.map((item) => (
-                    <NavLinkItem key={item.to} item={item} pathname={pathname} />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            <SidebarGroup>
-              <SidebarGroupLabel>Operación</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {operationAdminItems.map((item) => (
-                    <NavLinkItem key={item.to} item={item} pathname={pathname} />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
-        )}
+        <SidebarSeparator />
+        <SidebarGroup>
+          <SidebarGroupLabel>Catálogos</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {catalogItems.map((item) => (
+                <NavLinkItem key={item.to} item={item} pathname={pathname} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Notificaciones</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {notificationItems.map((item) => (
+                <NavLinkItem key={item.to} item={item} pathname={pathname} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Usuarios y accesos</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {userItems.map((item) => (
+                <NavLinkItem key={item.to} item={item} pathname={pathname} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Operación</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {operationAdminItems.map((item) => (
+                <NavLinkItem key={item.to} item={item} pathname={pathname} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <div className="px-2 py-1.5 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-          Rol: <span className="font-medium text-foreground">{ROLE_LABEL[role]}</span>
+          Rol: <span className="font-medium text-foreground">Administrador</span>
         </div>
       </SidebarFooter>
       <SidebarRail />

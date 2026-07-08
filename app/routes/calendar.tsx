@@ -164,8 +164,6 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
   return (
     <div className="flex h-full flex-col space-y-4">
       <PageHeader
-        title="Calendario de ventanas"
-        description="Vista por nave de las ventanas programadas, en curso y completadas."
         action={
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3 text-xs text-muted-foreground">

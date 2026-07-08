@@ -92,8 +92,6 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
   return (
     <div className="max-w-2xl space-y-4">
       <PageHeader
-        title={window.client.name}
-        description={window.warehouse.name}
         action={
           <div className="flex gap-2">
             {window.status === "ARRIVED" && (
@@ -118,6 +116,7 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
             </Badge>
           </div>
           <div className="grid grid-cols-2 gap-4">
+            <Field label="Cliente" value={window.client.name} />
             <Field label="Nave" value={window.warehouse.name} />
             <Field label="Operador" value={window.operatorName} />
             <Field label="Placas" value={window.licensePlate} />

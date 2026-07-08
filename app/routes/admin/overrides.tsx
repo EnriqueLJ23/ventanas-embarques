@@ -21,7 +21,6 @@ import {
 } from "~/components/ui/table";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { PageHeader } from "~/components/layout/PageHeader";
 import { EmptyState } from "~/components/layout/EmptyState";
 import { TableCard } from "~/components/layout/TableCard";
 import { Card, CardContent } from "~/components/ui/card";
@@ -69,10 +68,6 @@ export default function OverridesAdmin({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title="Excepciones"
-        description="Solicitudes de excepción a la validación de solapamiento, pendientes de revisión."
-      />
       {overrides.length === 0 ? (
         <Card>
           <CardContent>
