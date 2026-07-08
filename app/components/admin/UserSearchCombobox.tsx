@@ -73,7 +73,7 @@ export function UserSearchCombobox({
               <button
                 key={u.email}
                 type="button"
-                className="block w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+                className="block w-full cursor-pointer rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
                 onClick={() => {
                   onSelect(u);
                   setOpen(false);

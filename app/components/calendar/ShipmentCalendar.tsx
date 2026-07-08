@@ -3,6 +3,12 @@ import FullCalendar from "@fullcalendar/react";
 import resourceTimelinePlugin from "@fullcalendar/resource-timeline";
 import interactionPlugin from "@fullcalendar/interaction";
 import { format } from "date-fns";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 const STATUS_COLORS: Record<string, string> = {
   SCHEDULED: "#64748b",
@@ -46,33 +52,42 @@ export function ShipmentCalendar({
   }, [date]);
 
   return (
-    <div className="h-full min-h-[420px]">
-      <FullCalendar
-        ref={calendarRef}
-        schedulerLicenseKey="CC-Attribution-NonCommercial-NoDerivatives"
-        plugins={[resourceTimelinePlugin, interactionPlugin]}
-        initialView="resourceTimelineDay"
-        initialDate={date}
-        resources={resources}
-        resourceAreaWidth="120px"
-        events={events.map((e) => ({
-          id: e.id,
-          resourceId: e.resourceId,
-          title: e.title,
-          start: e.start,
-          end: e.end,
-          color: STATUS_COLORS[e.status] ?? STATUS_COLORS.SCHEDULED,
-        }))}
-        eventClick={(info) => onEventClick(info.event.id)}
-        eventDidMount={(info) => {
-          info.el.title = info.event.title;
-        }}
-        datesSet={(arg) => onDateChange(format(arg.view.currentStart, "yyyy-MM-dd"))}
-        height="100%"
-        expandRows={true}
-        slotMinTime="07:00:00"
-        slotMaxTime="17:00:00"
-      />
-    </div>
+    <TooltipProvider delayDuration={200}>
+      <div className="h-full min-h-[420px]">
+        <FullCalendar
+          ref={calendarRef}
+          schedulerLicenseKey="CC-Attribution-NonCommercial-NoDerivatives"
+          plugins={[resourceTimelinePlugin, interactionPlugin]}
+          initialView="resourceTimelineDay"
+          initialDate={date}
+          resources={resources}
+          resourceAreaWidth="120px"
+          events={events.map((e) => ({
+            id: e.id,
+            resourceId: e.resourceId,
+            title: e.title,
+            start: e.start,
+            end: e.end,
+            color: STATUS_COLORS[e.status] ?? STATUS_COLORS.SCHEDULED,
+          }))}
+          eventClick={(info) => onEventClick(info.event.id)}
+          eventContent={(arg) => (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="fc-event-title fc-sticky w-full cursor-pointer truncate">
+                  {arg.event.title}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>{arg.event.title}</TooltipContent>
+            </Tooltip>
+          )}
+          datesSet={(arg) => onDateChange(format(arg.view.currentStart, "yyyy-MM-dd"))}
+          height="100%"
+          expandRows={true}
+          slotMinTime="07:00:00"
+          slotMaxTime="17:00:00"
+        />
+      </div>
+    </TooltipProvider>
   );
 }

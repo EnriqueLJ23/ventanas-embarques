@@ -136,7 +136,7 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
                 )}
                 <button
                   type="button"
-                  className="text-xs text-muted-foreground underline"
+                  className="cursor-pointer text-xs text-muted-foreground underline"
                   onClick={() => setManualEntry(true)}
                 >
                   Ingresar datos manualmente
@@ -154,7 +154,7 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
                 </div>
                 <button
                   type="button"
-                  className="text-xs text-muted-foreground underline"
+                  className="cursor-pointer text-xs text-muted-foreground underline"
                   onClick={() => setManualEntry(false)}
                 >
                   Volver a la búsqueda del directorio
