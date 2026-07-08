@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { Card, CardContent } from "~/components/ui/card";
+import { Separator } from "~/components/ui/separator";
 import { WindowQrDialog } from "~/components/qr/WindowQrDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -80,12 +81,20 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
     navigate(".", { replace: true });
   }
 
-  function Field({ label, value }: { label: string; value: ReactNode }) {
+  function Field({ label, value, muted }: { label: string; value: ReactNode; muted?: boolean }) {
     return (
       <div>
         <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
-        <p className="font-medium">{value}</p>
+        <p className={muted ? "text-muted-foreground" : "font-medium"}>{value}</p>
       </div>
+    );
+  }
+
+  function SectionLabel({ children }: { children: ReactNode }) {
+    return (
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2">
+        {children}
+      </p>
     );
   }
 
@@ -108,38 +117,63 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
       />
 
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between pb-4">
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Estado</span>
             <Badge variant={WINDOW_STATUS_BADGE_VARIANT[window.status]}>
               {WINDOW_STATUS_LABEL[window.status]}
             </Badge>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <Field label="Cliente" value={window.client.name} />
             <Field label="Nave" value={window.warehouse.name} />
             <Field label="Operador" value={window.operatorName} />
             <Field label="Placas" value={window.licensePlate} />
-            <Field
-              label="Horario"
-              value={`${format(new Date(window.scheduledStart), "dd/MM/yyyy HH:mm")} - ${format(new Date(window.scheduledEnd), "HH:mm")}`}
-            />
-            {window.actualArrival && (
-              <Field label="Hora real de entrada" value={format(new Date(window.actualArrival), "dd/MM/yyyy HH:mm")} />
-            )}
-            {window.actualEnd && (
-              <Field label="Hora real de salida" value={format(new Date(window.actualEnd), "dd/MM/yyyy HH:mm")} />
-            )}
-            {window.rollsCount != null && (
-              <Field label="Rollos embarcados" value={window.rollsCount} />
-            )}
-            {window.delayReasonCategory && (
-              <Field label="Motivo de retraso" value={window.delayReasonCategory.label} />
-            )}
-            {window.delayReason && (
-              <Field label="Detalle adicional" value={window.delayReason} />
-            )}
           </div>
+
+          <Separator />
+
+          <div>
+            <SectionLabel>Horario estimado</SectionLabel>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Entrada estimada" value={format(new Date(window.scheduledStart), "dd/MM/yyyy HH:mm")} />
+              <Field label="Salida estimada" value={format(new Date(window.scheduledEnd), "dd/MM/yyyy HH:mm")} />
+            </div>
+          </div>
+
+          <div>
+            <SectionLabel>Horario real</SectionLabel>
+            <div className="grid grid-cols-2 gap-4">
+              <Field
+                label="Llegada real"
+                value={window.actualArrival ? format(new Date(window.actualArrival), "dd/MM/yyyy HH:mm") : "Pendiente"}
+                muted={!window.actualArrival}
+              />
+              <Field
+                label="Salida real"
+                value={window.actualEnd ? format(new Date(window.actualEnd), "dd/MM/yyyy HH:mm") : "Pendiente"}
+                muted={!window.actualEnd}
+              />
+            </div>
+          </div>
+
+          {(window.rollsCount != null || window.delayReasonCategory || window.delayReason) && (
+            <>
+              <Separator />
+              <div className="grid grid-cols-2 gap-4">
+                {window.rollsCount != null && (
+                  <Field label="Rollos embarcados" value={window.rollsCount} />
+                )}
+                {window.delayReasonCategory && (
+                  <Field label="Motivo de retraso" value={window.delayReasonCategory.label} />
+                )}
+                {window.delayReason && (
+                  <Field label="Detalle adicional" value={window.delayReason} />
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

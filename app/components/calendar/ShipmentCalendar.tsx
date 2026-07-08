@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
 import resourceTimelinePlugin from "@fullcalendar/resource-timeline";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -27,18 +28,28 @@ export interface CalendarEvent {
 export function ShipmentCalendar({
   resources,
   events,
+  date,
   onEventClick,
 }: {
   resources: CalendarResource[];
   events: CalendarEvent[];
+  date: string;
   onEventClick: (id: string) => void;
 }) {
+  const calendarRef = useRef<FullCalendar>(null);
+
+  useEffect(() => {
+    calendarRef.current?.getApi().gotoDate(date);
+  }, [date]);
+
   return (
     <div className="h-full min-h-[420px]">
       <FullCalendar
+        ref={calendarRef}
         schedulerLicenseKey="CC-Attribution-NonCommercial-NoDerivatives"
         plugins={[resourceTimelinePlugin, interactionPlugin]}
         initialView="resourceTimelineDay"
+        initialDate={date}
         resources={resources}
         resourceAreaWidth="120px"
         events={events.map((e) => ({
@@ -50,6 +61,9 @@ export function ShipmentCalendar({
           color: STATUS_COLORS[e.status] ?? STATUS_COLORS.SCHEDULED,
         }))}
         eventClick={(info) => onEventClick(info.event.id)}
+        eventDidMount={(info) => {
+          info.el.title = info.event.title;
+        }}
         height="100%"
         expandRows={true}
         slotMinTime="07:00:00"

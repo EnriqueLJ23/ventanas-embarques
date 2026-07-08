@@ -50,7 +50,7 @@ export default function Dashboard() {
   if (home) {
     const atHome = pathname === home.to;
     return (
-      <div className="flex min-h-svh flex-col">
+      <div className="flex h-svh flex-col">
         <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background/80 px-4 backdrop-blur-xl">
           <div className="flex items-center gap-2">
             {!atHome && (
