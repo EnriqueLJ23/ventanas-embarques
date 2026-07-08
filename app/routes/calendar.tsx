@@ -196,6 +196,7 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
             resources={resources}
             events={events}
             date={date}
+            onDateChange={setDate}
             onEventClick={(id) => navigate(`/windows/${id}`)}
           />
         </CardContent>

@@ -37,7 +37,10 @@ export function WindowQrDialog({
           <DialogTitle>Código QR de la ventana</DialogTitle>
         </DialogHeader>
         <div ref={containerRef} className="flex flex-col items-center gap-3 bg-white p-4">
-          <QRCodeCanvas value={buildCheckinUrl(window.location.origin, windowData.id)} size={220} />
+          <QRCodeCanvas
+            value={buildCheckinUrl(typeof window === "undefined" ? "" : window.location.origin, windowData.id)}
+            size={220}
+          />
           <p className="text-sm text-center whitespace-pre-line text-black">
             {buildQrPayload(windowData)}
           </p>

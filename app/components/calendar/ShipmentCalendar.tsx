@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
 import resourceTimelinePlugin from "@fullcalendar/resource-timeline";
 import interactionPlugin from "@fullcalendar/interaction";
+import { format } from "date-fns";
 
 const STATUS_COLORS: Record<string, string> = {
   SCHEDULED: "#64748b",
@@ -29,11 +30,13 @@ export function ShipmentCalendar({
   resources,
   events,
   date,
+  onDateChange,
   onEventClick,
 }: {
   resources: CalendarResource[];
   events: CalendarEvent[];
   date: string;
+  onDateChange: (date: string) => void;
   onEventClick: (id: string) => void;
 }) {
   const calendarRef = useRef<FullCalendar>(null);
@@ -64,6 +67,7 @@ export function ShipmentCalendar({
         eventDidMount={(info) => {
           info.el.title = info.event.title;
         }}
+        datesSet={(arg) => onDateChange(format(arg.view.currentStart, "yyyy-MM-dd"))}
         height="100%"
         expandRows={true}
         slotMinTime="07:00:00"
