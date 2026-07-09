@@ -10,11 +10,6 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
-html,
-body {
-  color-scheme: dark;
-}
-
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: 'Inter Variable', sans-serif;
@@ -59,12 +54,48 @@ body {
 }
 
 /*
- * Single dark-blue theme. The `.dark` selector is kept (rather than renamed
- * to `:root`) because shadcn-generated components emit `dark:` utility
- * classes for things outside the CSS-variable system (e.g. focus ring
- * opacity). `<html class="dark">` is set permanently in app/root.tsx so
- * those utilities stay active with no toggle and no light fallback.
+ * Two themes sharing the same blue hue (255): `:root` (light, default) and
+ * `.dark` (the original dark-blue theme, applied when <html> has the "dark"
+ * class). The class is set to "dark" server-side by default in
+ * app/root.tsx and removed client-side by an inline <head> script when the
+ * user has chosen light (see app/root.tsx) — never toggled via a React
+ * re-render, so there's no flash and no hydration-driven repaint.
  */
+:root {
+  --background: oklch(0.99 0.005 255);
+  --foreground: oklch(0.20 0.02 255);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.20 0.02 255);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.20 0.02 255);
+  --primary: oklch(0.55 0.19 255);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.95 0.01 255);
+  --secondary-foreground: oklch(0.25 0.02 255);
+  --muted: oklch(0.96 0.008 255);
+  --muted-foreground: oklch(0.50 0.02 255);
+  --accent: oklch(0.93 0.02 255);
+  --accent-foreground: oklch(0.25 0.02 255);
+  --destructive: oklch(0.58 0.21 25);
+  --border: oklch(0 0 0 / 8%);
+  --input: oklch(0 0 0 / 12%);
+  --ring: oklch(0.55 0.19 255);
+  --chart-1: oklch(0.55 0.19 255);
+  --chart-2: oklch(0.60 0.15 220);
+  --chart-3: oklch(0.48 0.16 270);
+  --chart-4: oklch(0.65 0.12 230);
+  --chart-5: oklch(0.40 0.14 255);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.97 0.008 255);
+  --sidebar-foreground: oklch(0.20 0.02 255);
+  --sidebar-primary: oklch(0.55 0.19 255);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.92 0.02 255);
+  --sidebar-accent-foreground: oklch(0.20 0.02 255);
+  --sidebar-border: oklch(0 0 0 / 8%);
+  --sidebar-ring: oklch(0.55 0.19 255);
+}
+
 .dark {
   --background: oklch(0.19 0.025 255);
   --foreground: oklch(0.95 0.01 255);
