@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/notifications";
 import { requireUser } from "~/lib/session.server";
@@ -29,14 +29,14 @@ import { Card, CardContent } from "~/components/ui/card";
 import { CrudFormDialog } from "~/components/admin/CrudFormDialog";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
-import type { NotificationRecipient } from "@prisma/client";
 import { NOTIFICATION_EVENTS, NOTIFICATION_EVENT_LABEL } from "~/lib/notificationEvents";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request, ["ADMINISTRADOR"]);
   const [recipients, users] = await Promise.all([
     prisma.notificationRecipient.findMany({
-      orderBy: [{ event: "asc" }, { user: { name: "asc" } }],
+      where: { active: true },
+      orderBy: [{ user: { name: "asc" } }, { event: "asc" }],
       include: { user: { select: { id: true, name: true, email: true, active: true } } },
     }),
     prisma.user.findMany({
@@ -48,69 +48,75 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { recipients, users };
 }
 
+type RecipientGroup = {
+  user: { id: number; name: string; email: string };
+  events: string[];
+};
+
 export default function NotificationsAdmin({ loaderData }: Route.ComponentProps) {
   const { recipients, users } = loaderData;
   const navigate = useNavigate();
-  const [createOpen, setCreateOpen] = useState(false);
-  const [events, setEvents] = useState<string[]>([]);
-  const [userId, setUserId] = useState("");
 
-  function toggleEvent(event: string, checked: boolean) {
-    setEvents((prev) => (checked ? [...prev, event] : prev.filter((e) => e !== event)));
+  const groups = useMemo(() => {
+    const byUser = new Map<number, RecipientGroup>();
+    for (const r of recipients) {
+      if (!byUser.has(r.userId)) byUser.set(r.userId, { user: r.user, events: [] });
+      byUser.get(r.userId)!.events.push(r.event);
+    }
+    return [...byUser.values()].sort((a, b) => a.user.name.localeCompare(b.user.name));
+  }, [recipients]);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [dialogUserId, setDialogUserId] = useState("");
+  const [dialogUserLabel, setDialogUserLabel] = useState("");
+  const [dialogEvents, setDialogEvents] = useState<string[]>([]);
+
+  function openCreate() {
+    setDialogMode("create");
+    setDialogUserId("");
+    setDialogUserLabel("");
+    setDialogEvents([]);
+    setDialogOpen(true);
   }
 
-  const [editTarget, setEditTarget] = useState<NotificationRecipient | null>(null);
-  const [editEvent, setEditEvent] = useState<string>(NOTIFICATION_EVENTS[0]);
-  const [editUserId, setEditUserId] = useState("");
-
-  function openEdit(r: NotificationRecipient) {
-    setEditTarget(r);
-    setEditEvent(r.event);
-    setEditUserId(String(r.userId));
+  function openEdit(group: RecipientGroup) {
+    setDialogMode("edit");
+    setDialogUserId(String(group.user.id));
+    setDialogUserLabel(`${group.user.name} — ${group.user.email}`);
+    setDialogEvents(group.events);
+    setDialogOpen(true);
   }
 
-  async function handleEditSave() {
-    if (!editTarget) return;
+  function selectDialogUser(id: string) {
+    setDialogUserId(id);
+    // Prefill with this user's existing events so saving never silently
+    // wipes out subscriptions they already had.
+    const existing = groups.find((g) => String(g.user.id) === id);
+    setDialogEvents(existing ? existing.events : []);
+  }
+
+  function toggleDialogEvent(event: string, checked: boolean) {
+    setDialogEvents((prev) => (checked ? [...prev, event] : prev.filter((e) => e !== event)));
+  }
+
+  async function handleSave() {
     const res = await fetch("/api/notification-recipients", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: editTarget.id, event: editEvent, userId: editUserId }),
+      body: JSON.stringify({ userId: dialogUserId, events: dialogEvents }),
     });
-    if (!res.ok) { toast.error("No se pudo actualizar el destinatario"); return; }
-    toast.success("Destinatario actualizado");
-    setEditTarget(null);
+    if (!res.ok) { toast.error("No se pudo guardar el destinatario"); return; }
+    toast.success("Destinatario guardado");
+    setDialogOpen(false);
     navigate(".", { replace: true });
   }
 
-  async function handleCreate() {
-    const res = await fetch("/api/notification-recipients", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ events, userId }),
-    });
-    if (!res.ok) { toast.error("No se pudo agregar el destinatario"); return; }
-    toast.success(events.length > 1 ? "Destinatario agregado a los eventos seleccionados" : "Destinatario agregado");
-    setCreateOpen(false);
-    setUserId("");
-    setEvents([]);
-    navigate(".", { replace: true });
-  }
-
-  async function toggleActive(r: NotificationRecipient) {
-    const res = await fetch("/api/notification-recipients", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: r.id, active: !r.active }),
-    });
-    if (!res.ok) { toast.error("No se pudo actualizar el destinatario"); return; }
-    navigate(".", { replace: true });
-  }
-
-  async function handleDelete(r: NotificationRecipient) {
+  async function handleDelete(group: RecipientGroup) {
     const res = await fetch("/api/notification-recipients", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: r.id }),
+      body: JSON.stringify({ userId: group.user.id }),
     });
     if (!res.ok) { toast.error("No se pudo eliminar el destinatario"); return; }
     toast.success("Destinatario eliminado");
@@ -120,83 +126,51 @@ export default function NotificationsAdmin({ loaderData }: Route.ComponentProps)
   return (
     <div className="space-y-4">
       <PageHeader
-        action={
-          <CrudFormDialog
-            trigger={<Button>Nuevo destinatario</Button>}
-            title="Nuevo destinatario"
-            open={createOpen}
-            onOpenChange={(o) => { setCreateOpen(o); if (!o) setEvents([]); }}
-            onSave={handleCreate}
-            saveDisabled={!userId || events.length === 0}
-          >
-            <div className="space-y-2">
-              <Label>Eventos</Label>
-              {NOTIFICATION_EVENTS.map((e) => (
-                <div key={e} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`event-${e}`}
-                    checked={events.includes(e)}
-                    onCheckedChange={(checked) => toggleEvent(e, checked === true)}
-                  />
-                  <Label htmlFor={`event-${e}`} className="font-normal cursor-pointer">
-                    {NOTIFICATION_EVENT_LABEL[e]}
-                  </Label>
-                </div>
-              ))}
-            </div>
-            <div className="space-y-1">
-              <Label>Usuario</Label>
-              <Select value={userId} onValueChange={setUserId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un usuario" />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map((u) => (
-                    <SelectItem key={u.id} value={String(u.id)}>{u.name} — {u.email}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CrudFormDialog>
-        }
+        action={<Button onClick={openCreate}>Nuevo destinatario</Button>}
       />
 
       <CrudFormDialog
-        title="Editar destinatario"
-        open={!!editTarget}
-        onOpenChange={(o) => !o && setEditTarget(null)}
-        onSave={handleEditSave}
-        saveDisabled={!editUserId}
+        title={dialogMode === "create" ? "Nuevo destinatario" : "Editar destinatario"}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSave={handleSave}
+        saveDisabled={!dialogUserId}
       >
         <div className="space-y-1">
-          <Label>Evento</Label>
-          <Select value={editEvent} onValueChange={setEditEvent}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {NOTIFICATION_EVENTS.map((e) => (
-                <SelectItem key={e} value={e}>{NOTIFICATION_EVENT_LABEL[e]}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
           <Label>Usuario</Label>
-          <Select value={editUserId} onValueChange={setEditUserId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecciona un usuario" />
-            </SelectTrigger>
-            <SelectContent>
-              {users.map((u) => (
-                <SelectItem key={u.id} value={String(u.id)}>{u.name} — {u.email}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {dialogMode === "edit" ? (
+            <p className="rounded-md border p-2 text-sm text-muted-foreground">{dialogUserLabel}</p>
+          ) : (
+            <Select value={dialogUserId} onValueChange={selectDialogUser}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona un usuario" />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={String(u.id)}>{u.name} — {u.email}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label>Eventos</Label>
+          {NOTIFICATION_EVENTS.map((e) => (
+            <div key={e} className="flex items-center gap-2">
+              <Checkbox
+                id={`event-${e}`}
+                checked={dialogEvents.includes(e)}
+                onCheckedChange={(checked) => toggleDialogEvent(e, checked === true)}
+              />
+              <Label htmlFor={`event-${e}`} className="font-normal cursor-pointer">
+                {NOTIFICATION_EVENT_LABEL[e]}
+              </Label>
+            </div>
+          ))}
         </div>
       </CrudFormDialog>
 
-      {recipients.length === 0 ? (
+      {groups.length === 0 ? (
         <Card>
           <CardContent>
             <EmptyState message="No hay destinatarios configurados todavía." icon={Mail} />
@@ -207,31 +181,31 @@ export default function NotificationsAdmin({ loaderData }: Route.ComponentProps)
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-4">Evento</TableHead>
-                <TableHead>Correo</TableHead>
-                <TableHead>Estado</TableHead>
+                <TableHead className="pl-4">Usuario</TableHead>
+                <TableHead>Eventos</TableHead>
                 <TableHead className="pr-4"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recipients.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="pl-4 font-medium">{NOTIFICATION_EVENT_LABEL[r.event]}</TableCell>
-                  <TableCell className="text-muted-foreground">{r.user.name} — {r.user.email}</TableCell>
+              {groups.map((g) => (
+                <TableRow key={g.user.id}>
+                  <TableCell className="pl-4 font-medium">
+                    {g.user.name}
+                    <span className="block font-normal text-muted-foreground">{g.user.email}</span>
+                  </TableCell>
                   <TableCell>
-                    <Badge variant={r.active ? "success" : "secondary"}>
-                      {r.active ? "Activo" : "Inactivo"}
-                    </Badge>
+                    <div className="flex flex-wrap gap-1">
+                      {g.events.map((e) => (
+                        <Badge key={e} variant="outline">{NOTIFICATION_EVENT_LABEL[e as keyof typeof NOTIFICATION_EVENT_LABEL]}</Badge>
+                      ))}
+                    </div>
                   </TableCell>
                   <TableCell className="pr-4">
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openEdit(r)}>
+                      <Button variant="outline" size="sm" onClick={() => openEdit(g)}>
                         Editar
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => toggleActive(r)}>
-                        {r.active ? "Desactivar" : "Activar"}
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(r)}>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(g)}>
                         Eliminar
                       </Button>
                     </div>

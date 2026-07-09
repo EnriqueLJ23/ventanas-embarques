@@ -246,7 +246,7 @@ export default function UsersAdmin({ loaderData }: Route.ComponentProps) {
                   <TableCell className="pr-4">
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" onClick={() => openEdit(u)}>
-                        Editar rol
+                        Editar
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => toggleActive(u)}>
                         {u.active ? "Desactivar" : "Activar"}
