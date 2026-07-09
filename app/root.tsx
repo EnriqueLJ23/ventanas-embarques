@@ -30,21 +30,29 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+const THEME_INIT_SCRIPT = `try {
+  if (localStorage.getItem("theme") === "light") {
+    document.documentElement.classList.remove("dark");
+    document.documentElement.style.colorScheme = "light";
+  }
+} catch (e) {}`;
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className="dark">
+    <html lang="es" className="dark" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <Meta />
         <Links />
       </head>
       <body>
         <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-          <div className="animate-blob-drift absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-[oklch(0.58_0.22_255)] opacity-30 blur-[130px]" />
-          <div className="animate-blob-drift [animation-delay:-7s] absolute -top-24 -right-32 h-[500px] w-[500px] rounded-full bg-[oklch(0.6_0.20_340)] opacity-20 blur-[130px]" />
-          <div className="animate-blob-drift [animation-delay:-13s] absolute -bottom-40 -left-20 h-[520px] w-[520px] rounded-full bg-[oklch(0.65_0.16_195)] opacity-20 blur-[130px]" />
-          <div className="animate-blob-drift [animation-delay:-4s] absolute -bottom-32 -right-40 h-[420px] w-[420px] rounded-full bg-[oklch(0.55_0.20_300)] opacity-15 blur-[130px]" />
+          <div className="animate-blob-drift absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-[oklch(0.58_0.22_255)] opacity-10 dark:opacity-30 blur-[130px]" />
+          <div className="animate-blob-drift [animation-delay:-7s] absolute -top-24 -right-32 h-[500px] w-[500px] rounded-full bg-[oklch(0.6_0.20_340)] opacity-10 dark:opacity-20 blur-[130px]" />
+          <div className="animate-blob-drift [animation-delay:-13s] absolute -bottom-40 -left-20 h-[520px] w-[520px] rounded-full bg-[oklch(0.65_0.16_195)] opacity-10 dark:opacity-20 blur-[130px]" />
+          <div className="animate-blob-drift [animation-delay:-4s] absolute -bottom-32 -right-40 h-[420px] w-[420px] rounded-full bg-[oklch(0.55_0.20_300)] opacity-10 dark:opacity-15 blur-[130px]" />
         </div>
         {children}
         <Toaster />
