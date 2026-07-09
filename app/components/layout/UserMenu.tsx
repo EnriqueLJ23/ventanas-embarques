@@ -1,4 +1,5 @@
-import { LogOut } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import {
   DropdownMenu,
@@ -14,6 +15,20 @@ function initials(email: string) {
 }
 
 export function UserMenu({ email }: { email: string }) {
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+
+  useEffect(() => {
+    setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    document.documentElement.classList.toggle("dark", next === "dark");
+    document.documentElement.style.colorScheme = next;
+    localStorage.setItem("theme", next);
+    setTheme(next);
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -28,6 +43,20 @@ export function UserMenu({ email }: { email: string }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>{email}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={toggleTheme}>
+          {theme === "dark" ? (
+            <>
+              <Sun className="size-4" />
+              Tema claro
+            </>
+          ) : (
+            <>
+              <Moon className="size-4" />
+              Tema oscuro
+            </>
+          )}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <form method="post" action="/logout" className="w-full">
