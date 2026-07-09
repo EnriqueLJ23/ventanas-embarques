@@ -28,7 +28,7 @@
 - Consumes: nothing (pure CSS).
 - Produces: every CSS variable consumed by `@theme inline` (`app/app.css:18-59`) now has both a light (`:root`) and dark (`.dark`) value — no code changes needed to that block, it already reads through `var(--foreground)` etc.
 
-- [ ] **Step 1: Remove the hardcoded dark-only `color-scheme` rule**
+- [x] **Step 1: Remove the hardcoded dark-only `color-scheme` rule**
 
 In `app/app.css`, delete this block (currently lines 13-16):
 
@@ -41,7 +41,7 @@ body {
 
 `color-scheme` will instead be set inline by the `<head>` script (Task 2) and the toggle handler (Task 3), matching whichever theme is actually active.
 
-- [ ] **Step 2: Replace the single-theme comment with a two-theme comment, and add the `:root` (light) block above `.dark`**
+- [x] **Step 2: Replace the single-theme comment with a two-theme comment, and add the `:root` (light) block above `.dark`**
 
 Find this comment + block (currently starting at what was line 61, now a few lines earlier after Step 1's deletion):
 
@@ -171,12 +171,12 @@ Replace it with (new comment + new `:root` block, followed by the **unchanged** 
 }
 ```
 
-- [ ] **Step 3: Run typecheck to confirm nothing broke**
+- [x] **Step 3: Run typecheck to confirm nothing broke**
 
 Run: `npm run typecheck`
 Expected: passes with no output (CSS-only change, but confirms the build pipeline — `react-router typegen && tsc` — is still healthy before continuing).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add app/app.css
@@ -194,7 +194,7 @@ git commit -m "feat: add light theme palette alongside existing dark theme"
 - Consumes: `localStorage.theme` (string `"light" | "dark" | null`, read-only here).
 - Produces: on page load, `document.documentElement` has class `dark` present (default/no preference/dark) or absent (light), and `document.documentElement.style.colorScheme` matches. Task 3's toggle relies on this same convention (`classList.contains("dark")`) to detect the current theme on mount.
 
-- [ ] **Step 1: Add `suppressHydrationWarning` to `<html>` and an inline blocking script in `<head>`**
+- [x] **Step 1: Add `suppressHydrationWarning` to `<html>` and an inline blocking script in `<head>`**
 
 In `app/root.tsx`, replace the `Layout` function:
 
@@ -264,12 +264,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 The script must run as a plain `<script>` tag (not through React Router's `<Scripts/>`, which loads the hydration bundle too late to prevent a flash) and must sit before `<Meta />`/`<Links />` so it executes as early as possible during HTML parsing.
 
-- [ ] **Step 2: Run typecheck**
+- [x] **Step 2: Run typecheck**
 
 Run: `npm run typecheck`
 Expected: passes with no output.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/root.tsx
@@ -287,7 +287,7 @@ git commit -m "feat: add blocking theme-init script and fade background blobs in
 - Consumes: `document.documentElement.classList` (reads `"dark"` presence on mount, set by Task 2's script), `localStorage.theme` (writes on toggle).
 - Produces: nothing consumed by other tasks — this is the last piece, a self-contained UI control.
 
-- [ ] **Step 1: Rewrite `UserMenu.tsx` with the theme toggle**
+- [x] **Step 1: Rewrite `UserMenu.tsx` with the theme toggle**
 
 Replace the full contents of `app/components/layout/UserMenu.tsx`:
 
@@ -371,17 +371,17 @@ Notes for the implementer:
 - `DropdownMenuItem` (`app/components/ui/dropdown-menu.tsx:74`) already applies `flex items-center gap-1.5` and `cursor-pointer` to every item, so the `<Sun>`/`<Moon>` icon + label render correctly as direct children with no extra wrapper — same pattern as every other icon-bearing item in this codebase.
 - The label text describes the theme you'll switch **to** (seeing "Tema claro" while in dark mode, click it to go light), matching the icon shown.
 
-- [ ] **Step 2: Run typecheck**
+- [x] **Step 2: Run typecheck**
 
 Run: `npm run typecheck`
 Expected: passes with no output.
 
-- [ ] **Step 3: Run the test suite**
+- [x] **Step 3: Run the test suite**
 
 Run: `npm run test`
 Expected: `38 passed (38)` (or higher if other work landed since) — this task touches no business logic, so the existing suite must stay fully green.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add app/components/layout/UserMenu.tsx
@@ -391,6 +391,8 @@ git commit -m "feat: add light/dark theme toggle to UserMenu"
 ---
 
 ### Task 4: Manual visual verification
+
+> Steps 1-4 deferred by user request (2026-07-09) — they verify visually on their own Portainer deployment rather than a local dev server. Code passed `npm run typecheck` and `npm run test` (38/38) after every task. Step 5 (memory update) still done by the implementer.
 
 **Files:** none (verification only).
 
@@ -420,6 +422,6 @@ Toggle back to dark, reload again. Expected: loads directly in dark mode, no fla
 
 Open the app in a private/incognito window (empty `localStorage`). Expected: loads in dark mode, matching current production behavior for all existing users.
 
-- [ ] **Step 5: Update OpenWolf memory**
+- [x] **Step 5: Update OpenWolf memory**
 
 Per `.wolf/OPENWOLF.md`, append a one-line entry to `.wolf/memory.md` summarizing this session's changes, and update `.wolf/anatomy.md` for `app/app.css`, `app/root.tsx`, and `app/components/layout/UserMenu.tsx` to reflect the theme-toggle behavior now present in each.
