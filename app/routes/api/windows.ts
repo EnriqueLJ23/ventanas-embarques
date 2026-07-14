@@ -4,16 +4,18 @@ import { prisma } from "~/lib/db.server";
 import { logActivity } from "~/lib/activity.server";
 import { findOverlappingWindow } from "~/lib/validations/windowOverlap";
 import { buildQrPayload } from "~/lib/qr";
+import { checkinToken } from "~/lib/checkinToken.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireUser(request);
   const url = new URL(request.url);
   const date = url.searchParams.get("date");
-  const where = date
+  const dayStart = date ? new Date(`${date}T00:00:00`) : null;
+  const where = dayStart
     ? {
         scheduledStart: {
-          gte: new Date(`${date}T00:00:00`),
-          lt: new Date(`${date}T23:59:59`),
+          gte: dayStart,
+          lt: new Date(dayStart.getTime() + 24 * 60 * 60 * 1000),
         },
       }
     : {};
@@ -47,7 +49,12 @@ export async function action({ request }: Route.ActionArgs) {
   const scheduledEnd = new Date(scheduledStart.getTime() + client.avgLoadTime * 60000);
 
   const sameWarehouseWindows = await prisma.window.findMany({
-    where: { warehouseId, status: { not: "CANCELLED" } },
+    where: {
+      warehouseId,
+      status: { not: "CANCELLED" },
+      scheduledStart: { lt: scheduledEnd },
+      scheduledEnd: { gt: scheduledStart },
+    },
   });
   const conflict = findOverlappingWindow(
     { warehouseId, scheduledStart, scheduledEnd },
@@ -101,8 +108,14 @@ export async function action({ request }: Route.ActionArgs) {
       entityId: window.id,
       detail: reason,
     });
-    return Response.json({ window: updated, qrPayload, overridden: true }, { status: 201 });
+    return Response.json(
+      { window: updated, qrPayload, checkinToken: checkinToken(window.id), overridden: true },
+      { status: 201 },
+    );
   }
 
-  return Response.json({ window: updated, qrPayload }, { status: 201 });
+  return Response.json(
+    { window: updated, qrPayload, checkinToken: checkinToken(window.id) },
+    { status: 201 },
+  );
 }

@@ -6,6 +6,7 @@ services:
     ports:
       - "3025:3000"
     environment:
+      TZ: ${TZ:-America/Mexico_City}
       DATABASE_URL: ${DATABASE_URL}
       SESSION_SECRET: ${SESSION_SECRET}
       MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID}
@@ -23,6 +24,7 @@ services:
     image: postgres:16-alpine
     container_name: app-template-postgres
     environment:
+      TZ: ${TZ:-America/Mexico_City}
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: app_template

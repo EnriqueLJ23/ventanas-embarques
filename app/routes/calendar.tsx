@@ -25,20 +25,26 @@ import {
   type CalendarResource,
 } from "~/components/calendar/ShipmentCalendar";
 import { WindowQrDialog } from "~/components/qr/WindowQrDialog";
-import { WINDOW_TYPE_LABEL } from "~/lib/windowStatus";
+import {
+  WINDOW_STATUS_COLOR,
+  WINDOW_STATUS_LABEL,
+  WINDOW_TYPE_LABEL,
+} from "~/lib/windowStatus";
+import type { WindowStatus } from "@prisma/client";
 import { PageHeader } from "~/components/layout/PageHeader";
 import { Card, CardContent } from "~/components/ui/card";
 import { Plus } from "lucide-react";
 import { format, addMinutes } from "date-fns";
 import { toast } from "sonner";
 
-const STATUS_LEGEND: { label: string; colorClass: string }[] = [
-  { label: "Programada", colorClass: "bg-slate-500" },
-  { label: "Llegó a planta", colorClass: "bg-amber-600" },
-  { label: "En curso", colorClass: "bg-blue-600" },
-  { label: "Completada", colorClass: "bg-green-600" },
-  { label: "Cancelada", colorClass: "bg-red-600" },
-];
+/* Derivada de windowStatus.ts para que la leyenda nunca diverja del color
+   real de los eventos del calendario. */
+const STATUS_LEGEND = (
+  Object.keys(WINDOW_STATUS_LABEL) as WindowStatus[]
+).map((status) => ({
+  label: WINDOW_STATUS_LABEL[status],
+  color: WINDOW_STATUS_COLOR[status],
+}));
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request, ["VENTAS", "ADMINISTRADOR"]);
@@ -80,10 +86,14 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
   const [licensePlate, setLicensePlate] = useState("");
   const [qrOpen, setQrOpen] = useState(false);
   const [createdWindow, setCreatedWindow] = useState<any>(null);
+  const [createdToken, setCreatedToken] = useState<string | undefined>();
 
   const fetchEvents = useCallback(() => {
     fetch(`/api/windows?date=${date}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((windows) =>
         setEvents(
           windows.map((w: any) => ({
@@ -93,26 +103,41 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
             start: w.scheduledStart,
             end: w.scheduledEnd,
             status: w.status,
-          }))
-        )
-      );
+          })),
+        ),
+      )
+      .catch(() => toast.error("No se pudieron cargar las ventanas del día"));
   }, [date]);
 
+  // Warehouses se cargan una sola vez: alimentan tanto las filas del
+  // calendario como el select de Nave del diálogo.
   useEffect(() => {
     fetch("/api/warehouses")
-      .then((r) => r.json())
-      .then((whs) => setResources(whs.map((w: any) => ({ id: w.id, title: w.name }))));
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((whs) => {
+        setResources(whs.map((w: any) => ({ id: w.id, title: w.name })));
+        setWarehouses(whs.map((w: any) => ({ id: w.id, name: w.name })));
+      })
+      .catch(() => toast.error("No se pudieron cargar las naves"));
   }, []);
 
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
 
-  // Load clients + warehouses when dialog opens
+  // Load clients when dialog opens
   useEffect(() => {
     if (!dialogOpen) return;
-    fetch("/api/clients").then((r) => r.json()).then(setClients);
-    fetch("/api/warehouses").then((r) => r.json()).then(setWarehouses);
+    fetch("/api/clients")
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(setClients)
+      .catch(() => toast.error("No se pudieron cargar los clientes"));
   }, [dialogOpen]);
 
   const clientGroup = clients.filter((c) => c.name === clientName);
@@ -123,7 +148,10 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
   const clientId = selectedClient?.id ?? "";
   const uniqueClientNames = Array.from(new Set(clients.map((c) => c.name)));
   const start = windowDate && time ? new Date(`${windowDate}T${time}`) : null;
-  const end = start && selectedClient ? addMinutes(start, selectedClient.avgLoadTime) : null;
+  const end =
+    start && selectedClient
+      ? addMinutes(start, selectedClient.avgLoadTime)
+      : null;
   const selectedWarehouse = warehouses.find((w) => w.id === warehouseId);
 
   useEffect(() => {
@@ -141,8 +169,13 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
   }, [selectedClient]);
 
   function resetForm() {
-    setClientName(""); setPendingType(""); setWarehouseId(""); setWindowDate(date);
-    setTime(""); setOperatorName(""); setLicensePlate("");
+    setClientName("");
+    setPendingType("");
+    setWarehouseId("");
+    setWindowDate(date);
+    setTime("");
+    setOperatorName("");
+    setLicensePlate("");
   }
 
   async function handleSubmit() {
@@ -151,18 +184,26 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        clientId, warehouseId,
+        clientId,
+        warehouseId,
         scheduledStart: start.toISOString(),
-        operatorName, licensePlate,
+        operatorName,
+        licensePlate,
       }),
     });
-    if (!res.ok) { toast.error("No se pudo crear la ventana"); return; }
+    if (!res.ok) {
+      toast.error("No se pudo crear la ventana");
+      return;
+    }
     const data = await res.json();
     setCreatedWindow(data.window);
+    setCreatedToken(data.checkinToken);
     setDialogOpen(false);
     setQrOpen(true);
     if (data.overridden) {
-      toast.warning("Ventana creada con conflicto de horario — pendiente de revisión del administrador");
+      toast.warning(
+        "Ventana creada con conflicto de horario — pendiente de revisión del administrador",
+      );
     } else {
       toast.success("Ventana creada");
     }
@@ -180,7 +221,10 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               {STATUS_LEGEND.map((s) => (
                 <span key={s.label} className="flex items-center gap-1.5">
-                  <span className={`size-2 rounded-full ${s.colorClass}`} />
+                  <span
+                    className="size-2 rounded-full"
+                    style={{ backgroundColor: s.color }}
+                  />
                   {s.label}
                 </span>
               ))}
@@ -192,7 +236,13 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
               className="w-40 h-8 text-sm"
             />
             {canCreate && (
-              <Button size="sm" onClick={() => setDialogOpen(true)}>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setWindowDate((prev) => prev || date);
+                  setDialogOpen(true);
+                }}
+              >
                 <Plus className="size-4 mr-1" />
                 Nueva ventana
               </Button>
@@ -214,7 +264,13 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
       </Card>
 
       {/* Nueva ventana dialog */}
-      <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(o) => {
+          setDialogOpen(o);
+          if (!o) resetForm();
+        }}
+      >
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nueva ventana de embarque</DialogTitle>
@@ -240,7 +296,12 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
             {needsTypeChoice && (
               <div className="space-y-1">
                 <Label>Tipo de operación</Label>
-                <Select value={pendingType} onValueChange={(v) => setPendingType(v as "CARGA" | "DESCARGA")}>
+                <Select
+                  value={pendingType}
+                  onValueChange={(v) =>
+                    setPendingType(v as "CARGA" | "DESCARGA")
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Este cliente tiene Carga y Descarga — selecciona una" />
                   </SelectTrigger>
@@ -257,19 +318,28 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
 
             {selectedClient && !needsTypeChoice && (
               <p className="text-xs text-muted-foreground">
-                Tipo de operación: <span className="font-medium text-foreground">{WINDOW_TYPE_LABEL[selectedClient.type]}</span>
+                Tipo de operación:{" "}
+                <span className="font-medium text-foreground">
+                  {WINDOW_TYPE_LABEL[selectedClient.type]}
+                </span>
               </p>
             )}
 
             {selectedClient && (
               <p className="text-xs text-muted-foreground">
-                Tiempo estimado: <span className="font-medium">{selectedClient.avgLoadTime} min</span>
+                Tiempo estimado:{" "}
+                <span className="font-medium">
+                  {selectedClient.avgLoadTime} min
+                </span>
               </p>
             )}
 
             {selectedClient?.preferredWarehouseId ? (
               <p className="text-xs text-muted-foreground">
-                Nave asignada: <span className="font-medium text-foreground">{selectedWarehouse?.name ?? "—"}</span>
+                Nave asignada:{" "}
+                <span className="font-medium text-foreground">
+                  {selectedWarehouse?.name ?? "—"}
+                </span>
               </p>
             ) : selectedClient ? (
               <div className="space-y-1">
@@ -294,18 +364,30 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
             <div className="flex gap-3">
               <div className="space-y-1 flex-1">
                 <Label htmlFor="wdate">Fecha</Label>
-                <Input id="wdate" type="date" value={windowDate} onChange={(e) => setWindowDate(e.target.value)} />
+                <Input
+                  id="wdate"
+                  type="date"
+                  value={windowDate}
+                  onChange={(e) => setWindowDate(e.target.value)}
+                />
               </div>
               <div className="space-y-1 flex-1">
                 <Label htmlFor="wtime">Hora de llegada</Label>
-                <Input id="wtime" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+                <Input
+                  id="wtime"
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                />
               </div>
             </div>
 
             {end && (
               <p className="text-sm text-muted-foreground">
                 Hora estimada de fin:{" "}
-                <span className="font-medium text-foreground">{format(end, "HH:mm")}</span>
+                <span className="font-medium text-foreground">
+                  {format(end, "HH:mm")}
+                </span>
               </p>
             )}
 
@@ -313,17 +395,31 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
 
             <div className="space-y-1">
               <Label htmlFor="opName">Nombre del operador</Label>
-              <Input id="opName" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} />
+              <Input
+                id="opName"
+                value={operatorName}
+                onChange={(e) => setOperatorName(e.target.value)}
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="plate">Placas</Label>
-              <Input id="plate" value={licensePlate} onChange={(e) => setLicensePlate(e.target.value)} />
+              <Input
+                id="plate"
+                value={licensePlate}
+                onChange={(e) => setLicensePlate(e.target.value)}
+              />
             </div>
 
             <Button
               className="w-full"
               onClick={handleSubmit}
-              disabled={!clientId || !warehouseId || !start || !operatorName || !licensePlate}
+              disabled={
+                !clientId ||
+                !warehouseId ||
+                !start ||
+                !operatorName ||
+                !licensePlate
+              }
             >
               Guardar ventana
             </Button>
@@ -333,7 +429,12 @@ export default function Calendar({ loaderData }: Route.ComponentProps) {
 
       {/* QR dialog after creation */}
       {createdWindow && (
-        <WindowQrDialog open={qrOpen} onOpenChange={setQrOpen} window={createdWindow} />
+        <WindowQrDialog
+          open={qrOpen}
+          onOpenChange={setQrOpen}
+          window={createdWindow}
+          checkinToken={createdToken}
+        />
       )}
     </div>
   );

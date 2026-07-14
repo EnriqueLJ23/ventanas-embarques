@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import type { Route } from "./+types/detail";
 import { requireUser } from "~/lib/session.server";
 import { prisma } from "~/lib/db.server";
+import { checkinToken } from "~/lib/checkinToken.server";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Input } from "~/components/ui/input";
@@ -54,11 +55,16 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     }),
     prisma.delayReason.findMany({ where: { active: true }, orderBy: { label: "asc" } }),
   ]);
-  return { window, delayReasons, role: user.role };
+  return {
+    window,
+    delayReasons,
+    role: user.role,
+    checkinToken: checkinToken(window.id),
+  };
 }
 
 export default function WindowDetail({ loaderData }: Route.ComponentProps) {
-  const { window, delayReasons, role } = loaderData;
+  const { window, delayReasons, role, checkinToken } = loaderData;
   const canComplete = role === "ALMACEN" || role === "ADMINISTRADOR";
   const canEdit = role === "ADMINISTRADOR" && window.status === "SCHEDULED";
   const navigate = useNavigate();
@@ -392,7 +398,7 @@ export default function WindowDetail({ loaderData }: Route.ComponentProps) {
       </Dialog>
 
       {window.qrCode && (
-        <WindowQrDialog open={qrOpen} onOpenChange={setQrOpen} window={window} />
+        <WindowQrDialog open={qrOpen} onOpenChange={setQrOpen} window={window} checkinToken={checkinToken} />
       )}
     </div>
   );

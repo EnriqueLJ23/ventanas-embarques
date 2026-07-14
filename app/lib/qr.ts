@@ -24,6 +24,11 @@ export function buildQrPayload(w: QrWindowData): string {
   ].join("\n");
 }
 
-export function buildCheckinUrl(origin: string, windowId: string): string {
-  return `${origin.replace(/\/$/, "")}/checkin/${windowId}`;
+export function buildCheckinUrl(
+  origin: string,
+  windowId: string,
+  token?: string,
+): string {
+  const base = `${origin.replace(/\/$/, "")}/checkin/${windowId}`;
+  return token ? `${base}?t=${token}` : base;
 }

@@ -54,7 +54,13 @@ export async function loader({ request }: Route.LoaderArgs) {
   const userMap = new Map(users.map((u) => [u.id, u.name]));
 
   return {
-    logs: logs.map((l) => ({ ...l, userName: userMap.get(l.userId) ?? `Usuario ${l.userId}` })),
+    logs: logs.map((l) => ({
+      ...l,
+      userName:
+        l.userId === 0
+          ? "Sistema"
+          : (userMap.get(l.userId) ?? `Usuario ${l.userId}`),
+    })),
     page,
     totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
     search,

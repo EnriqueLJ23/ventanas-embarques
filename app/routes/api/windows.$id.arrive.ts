@@ -6,10 +6,26 @@ import { canArrive } from "~/lib/windowTransitions";
 import { sendEmail } from "~/services/email.server";
 import { WINDOW_TYPE_LABEL } from "~/lib/windowStatus";
 import { getRecipientEmails } from "~/lib/notificationRecipients.server";
+import { verifyCheckinToken } from "~/lib/checkinToken.server";
+import { escapeHtml } from "~/lib/escapeHtml";
 import { format } from "date-fns";
 
 export async function action({ request, params }: Route.ActionArgs) {
-  const userId = (await getOptionalUserId(request)) ?? 0;
+  const sessionUserId = await getOptionalUserId(request);
+
+  let body: { token?: string } = {};
+  try {
+    body = await request.json();
+  } catch {
+    // POST sin body (p. ej. QR antiguo) — se valida abajo
+  }
+
+  // Endpoint público (los guardias no tienen cuenta): exige el token firmado
+  // del QR, o bien una sesión autenticada (usuarios internos).
+  if (sessionUserId === null && !verifyCheckinToken(params.id, body.token)) {
+    return Response.json({ error: "unauthorized" }, { status: 403 });
+  }
+  const userId = sessionUserId ?? 0;
 
   const existing = await prisma.window.findUniqueOrThrow({
     where: { id: params.id },
@@ -41,8 +57,8 @@ export async function action({ request, params }: Route.ActionArgs) {
         subject: "Unidad ingresó a planta",
         bodyHtml: `
           <p><strong>Folio:</strong> ${window.id}</p>
-          <p><strong>Operador:</strong> ${window.operatorName}</p>
-          <p><strong>Placas:</strong> ${window.licensePlate}</p>
+          <p><strong>Operador:</strong> ${escapeHtml(window.operatorName)}</p>
+          <p><strong>Placas:</strong> ${escapeHtml(window.licensePlate)}</p>
           <p><strong>Tipo de operación:</strong> ${WINDOW_TYPE_LABEL[window.type]}</p>
           <p><strong>Hora de llegada:</strong> ${format(actualArrival, "dd/MM/yyyy HH:mm")}</p>
         `,

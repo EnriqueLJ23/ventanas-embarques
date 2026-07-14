@@ -1,11 +1,29 @@
 "use client"
 
-import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
+/* El tema de la app se controla con la clase `dark` en <html> (toggle manual
+   en UserMenu + script inline en root.tsx), no con next-themes — así que el
+   tema de los toasts se lee/observa directamente de esa clase. */
+function useHtmlClassTheme(): "light" | "dark" {
+  const [theme, setTheme] = useState<"light" | "dark">("dark")
+
+  useEffect(() => {
+    const el = document.documentElement
+    const update = () => setTheme(el.classList.contains("dark") ? "dark" : "light")
+    update()
+    const observer = new MutationObserver(update)
+    observer.observe(el, { attributes: true, attributeFilter: ["class"] })
+    return () => observer.disconnect()
+  }, [])
+
+  return theme
+}
+
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  const theme = useHtmlClassTheme()
 
   return (
     <Sonner

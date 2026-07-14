@@ -31,6 +31,10 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
+# tzdata: sin él, alpine ignora la variable TZ y el proceso corre en UTC
+# (rompe el filtro por día del calendario y las horas de los correos)
+RUN apk add --no-cache tzdata
+
 ENV NODE_ENV=production
 ENV PORT=3000
 

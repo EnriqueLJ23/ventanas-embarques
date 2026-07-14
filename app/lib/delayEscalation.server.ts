@@ -4,6 +4,7 @@ import { WINDOW_TYPE_LABEL } from "~/lib/windowStatus";
 import { format } from "date-fns";
 import { DELAY_THRESHOLDS_MINUTES, getDelayThresholdToNotify } from "./delayThresholds";
 import { getRecipientEmails, delayMinutesToEvent } from "./notificationRecipients.server";
+import { escapeHtml } from "./escapeHtml";
 
 const CHECK_INTERVAL_MS = 60_000;
 const MIN_THRESHOLD_MINUTES = DELAY_THRESHOLDS_MINUTES[0];
@@ -59,10 +60,10 @@ export async function checkDelays(): Promise<void> {
           subject: `Unidad con ${threshold} minutos de retraso`,
           bodyHtml: `
             <p><strong>Folio:</strong> ${window.id}</p>
-            <p><strong>Cliente:</strong> ${window.client.name}</p>
-            <p><strong>Operador:</strong> ${window.operatorName}</p>
-            <p><strong>Placas:</strong> ${window.licensePlate}</p>
-            <p><strong>Nave:</strong> ${window.warehouse.name}</p>
+            <p><strong>Cliente:</strong> ${escapeHtml(window.client.name)}</p>
+            <p><strong>Operador:</strong> ${escapeHtml(window.operatorName)}</p>
+            <p><strong>Placas:</strong> ${escapeHtml(window.licensePlate)}</p>
+            <p><strong>Nave:</strong> ${escapeHtml(window.warehouse.name)}</p>
             <p><strong>Tipo de operación:</strong> ${WINDOW_TYPE_LABEL[window.type]}</p>
             <p><strong>Hora programada:</strong> ${format(window.scheduledStart, "dd/MM/yyyy HH:mm")}</p>
             <p><strong>Minutos de retraso:</strong> ${threshold}</p>

@@ -11,6 +11,7 @@ import {
   Clock3,
   ListChecks,
   TimerReset,
+  type LucideIcon,
 } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis } from "recharts";
 import {
@@ -80,40 +81,36 @@ const occupancyChartConfig = {
   ventanas: { label: "Ventanas hoy", color: "var(--chart-1)" },
 } satisfies ChartConfig;
 
+function StatCard({
+  title,
+  icon: Icon,
+  value,
+}: {
+  title: string;
+  icon: LucideIcon;
+  value: number;
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <Icon className="size-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent className="text-3xl font-bold">{value}</CardContent>
+    </Card>
+  );
+}
+
 export default function Index({ loaderData }: Route.ComponentProps) {
   if (loaderData.role === "ADMINISTRADOR") {
     const { metrics, occupancy, pendingOverrides } = loaderData;
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Programadas</CardTitle>
-              <CalendarRange className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="text-3xl font-bold">{metrics.scheduled}</CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">En curso</CardTitle>
-              <Clock3 className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="text-3xl font-bold">{metrics.inProgress}</CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Completadas</CardTitle>
-              <ListChecks className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="text-3xl font-bold">{metrics.completed}</CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Con retraso</CardTitle>
-              <TimerReset className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="text-3xl font-bold">{metrics.delayed}</CardContent>
-          </Card>
+          <StatCard title="Programadas" icon={CalendarRange} value={metrics.scheduled} />
+          <StatCard title="En curso" icon={Clock3} value={metrics.inProgress} />
+          <StatCard title="Completadas" icon={ListChecks} value={metrics.completed} />
+          <StatCard title="Con retraso" icon={TimerReset} value={metrics.delayed} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

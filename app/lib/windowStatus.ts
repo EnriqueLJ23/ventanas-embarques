@@ -23,3 +23,13 @@ export const WINDOW_TYPE_LABEL: Record<WindowType, string> = {
   CARGA: "Carga",
   DESCARGA: "Descarga",
 };
+
+/* Única fuente de verdad para el color de cada estado — la usan tanto los
+   eventos de FullCalendar como la leyenda del calendario. */
+export const WINDOW_STATUS_COLOR: Record<WindowStatus, string> = {
+  SCHEDULED: "#64748b",
+  ARRIVED: "#d97706",
+  IN_PROGRESS: "#2563eb",
+  COMPLETED: "#16a34a",
+  CANCELLED: "#dc2626",
+};

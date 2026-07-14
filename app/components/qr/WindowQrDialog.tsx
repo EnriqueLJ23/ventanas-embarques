@@ -14,10 +14,12 @@ export function WindowQrDialog({
   open,
   onOpenChange,
   window: windowData,
+  checkinToken,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   window: QrWindowData;
+  checkinToken?: string;
 }) {
   const qrRef = useRef<HTMLDivElement>(null);
 
@@ -39,7 +41,7 @@ export function WindowQrDialog({
         <div className="flex flex-col items-center gap-3 bg-white p-4">
           <div ref={qrRef} className="bg-white p-2">
             <QRCodeCanvas
-              value={buildCheckinUrl(typeof window === "undefined" ? "" : window.location.origin, windowData.id)}
+              value={buildCheckinUrl(typeof window === "undefined" ? "" : window.location.origin, windowData.id, checkinToken)}
               size={220}
             />
           </div>

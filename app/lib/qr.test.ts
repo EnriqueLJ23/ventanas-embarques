@@ -13,4 +13,10 @@ describe("buildCheckinUrl", () => {
       "https://embarques.tq1.com.mx/checkin/w1"
     );
   });
+
+  it("appends the checkin token as query param when provided", () => {
+    expect(buildCheckinUrl("https://embarques.tq1.com.mx", "w1", "abc123")).toBe(
+      "https://embarques.tq1.com.mx/checkin/w1?t=abc123"
+    );
+  });
 });

@@ -9,26 +9,10 @@ import {
 
 import type { Route } from "./+types/root";
 import { Toaster } from "~/components/ui/sonner";
-import { startDelayEscalationWorker } from "~/lib/delayEscalation.server";
 import "./app.css";
 
-export async function loader() {
-  startDelayEscalationWorker();
-  return null;
-}
-
-export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
-];
+/* Inter se sirve self-hosted vía @fontsource-variable/inter (app.css) — sin
+   dependencia de Google Fonts, funciona sin salida a internet. */
 
 const THEME_INIT_SCRIPT = `try {
   if (localStorage.getItem("theme") === "light") {
@@ -68,15 +52,15 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  let message = "Error inesperado";
+  let details = "Ocurrió un error inesperado. Intenta de nuevo más tarde.";
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
+    message = error.status === 404 ? "404" : `Error ${error.status}`;
     details =
       error.status === 404
-        ? "The requested page could not be found."
+        ? "La página que buscas no existe o fue eliminada."
         : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
@@ -84,11 +68,19 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <main className="flex min-h-svh flex-col items-center justify-center gap-4 p-6 text-center">
+      <h1 className="text-6xl font-bold tracking-tight text-primary">
+        {message}
+      </h1>
+      <p className="max-w-md text-muted-foreground">{details}</p>
+      <a
+        href="/"
+        className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+      >
+        Volver al inicio
+      </a>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="max-h-80 w-full max-w-3xl overflow-auto rounded-lg border bg-card p-4 text-left text-xs">
           <code>{stack}</code>
         </pre>
       )}
